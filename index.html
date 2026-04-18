@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reporte de Alboroto</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+  <!-- Leaflet Draw CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;600&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --rojo:    #e63946;
+      --oscuro:  #1a1a2e;
+      --panel:   #16213e;
+      --borde:   #0f3460;
+      --texto:   #eaeaea;
+      --acento:  #f4a261;
+    }
+
+    body {
+      font-family: 'Barlow', sans-serif;
+      background: var(--oscuro);
+      color: var(--texto);
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    header {
+      background: var(--panel);
+      border-bottom: 3px solid var(--rojo);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-shrink: 0;
+      box-shadow: 0 4px 20px rgba(230,57,70,.35);
+    }
+
+    .pulse-icon {
+      width: 36px; height: 36px;
+      background: var(--rojo);
+      border-radius: 50%;
+      position: relative;
+      flex-shrink: 0;
+      animation: pulso 1.6s ease-in-out infinite;
+    }
+    .pulse-icon::after {
+      content: '!';
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px; color: #fff;
+    }
+    @keyframes pulso {
+      0%,100% { box-shadow: 0 0 0 0 rgba(230,57,70,.7); }
+      50%      { box-shadow: 0 0 0 12px rgba(230,57,70,0); }
+    }
+
+    header h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(1.3rem, 4vw, 1.9rem);
+      letter-spacing: 3px;
+      color: var(--texto);
+      line-height: 1;
+    }
+    header h1 span { color: var(--rojo); }
+
+    .instruccion {
+      background: var(--borde);
+      text-align: center;
+      font-size: .82rem;
+      padding: 6px 12px;
+      color: var(--acento);
+      letter-spacing: .5px;
+      flex-shrink: 0;
+    }
+
+    #mapa {
+      flex: 1;
+      width: 100%;
+      position: relative;
+    }
+
+    /* Panel inferior */
+    #panel {
+      background: var(--panel);
+      border-top: 2px solid var(--borde);
+      padding: 10px 16px;
+      flex-shrink: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #info {
+      flex: 1;
+      min-width: 200px;
+      font-size: .82rem;
+      color: #aac;
+      line-height: 1.5;
+    }
+    #info strong { color: var(--acento); font-size: .88rem; }
+
+    #btn-enviar {
+      background: #25D366;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 11px 22px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem;
+      letter-spacing: 2px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform .15s, box-shadow .15s;
+      box-shadow: 0 4px 14px rgba(37,211,102,.4);
+      white-space: nowrap;
+    }
+    #btn-enviar:hover  { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37,211,102,.55); }
+    #btn-enviar:active { transform: translateY(0); }
+    #btn-enviar:disabled {
+      background: #444; box-shadow: none; cursor: not-allowed;
+      opacity: .6;
+    }
+
+    #btn-limpiar {
+      background: transparent;
+      border: 1.5px solid var(--rojo);
+      color: var(--rojo);
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-family: 'Barlow', sans-serif;
+      font-size: .85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    #btn-limpiar:hover { background: rgba(230,57,70,.15); }
+
+    /* Estilos del círculo dibujado */
+    .leaflet-interactive { stroke: var(--rojo) !important; fill: rgba(230,57,70,.18) !important; }
+
+    /* Modo dibujo: cursor crosshair en el mapa */
+    #mapa.dibujando { cursor: crosshair !important; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="pulse-icon"></div>
+  <div>
+    <h1>ALERTA <span>ALBOROTO</span></h1>
+  </div>
+</header>
+
+<div class="instruccion">
+  ✏️ Usa el botón círculo en el mapa &nbsp;→&nbsp; dibuja la zona del incidente &nbsp;→&nbsp; envía por WhatsApp
+</div>
+
+<div id="mapa"></div>
+
+<div id="panel">
+  <div id="info">Dibuja un círculo sobre la zona del alboroto para obtener las coordenadas.</div>
+  <button id="btn-limpiar" onclick="limpiarCirculo()">🗑️ Borrar</button>
+  <button id="btn-enviar" disabled onclick="enviarWhatsApp()">
+    <svg width="20" height="20" viewBox="0 0 32 32" fill="currentColor">
+      <path d="M16 0C7.163 0 0 7.163 0 16c0 2.824.737 5.476 2.027 7.782L0 32l8.418-2.006A15.94 15.94 0 0016 32c8.837 0 16-7.163 16-16S24.837 0 16 0zm8.29 22.617c-.348.977-2.04 1.865-2.813 1.98-.719.107-1.623.152-2.617-.165-.602-.195-1.375-.455-2.363-.893-4.151-1.793-6.862-5.96-7.072-6.237-.206-.277-1.677-2.232-1.677-4.255 0-2.024 1.063-3.02 1.44-3.43.378-.41.823-.513 1.098-.513.274 0 .548.003.788.014.253.012.592-.097.927.707.348.83 1.183 2.855 1.287 3.063.104.208.174.452.035.73-.14.277-.21.45-.417.693-.208.243-.437.542-.623.727-.208.208-.424.433-.182.85.243.416 1.079 1.78 2.317 2.883 1.59 1.418 2.933 1.857 3.35 2.065.416.208.658.174.9-.104.243-.277 1.044-1.218 1.322-1.634.277-.416.554-.347.935-.208.38.138 2.413 1.138 2.828 1.345.416.208.693.312.796.487.104.174.104 1.009-.244 1.986z"/>
+    </svg>
+    ENVIAR POR WHATSAPP
+  </button>
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<!-- Leaflet Draw JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+
+<script>
+  // ── Configuración ──────────────────────────────────────────────
+  const WHATSAPP_NUM = '593963761330';   // número destino
+  const ZOOM_INICIAL = 14;
+
+  // Coordenadas de Ibarra, Ecuador como centro por defecto
+  const LAT_DEFAULT = 0.3516;
+  const LNG_DEFAULT = -78.1223;
+
+  // ── Mapa ───────────────────────────────────────────────────────
+  const mapa = L.map('mapa').setView([LAT_DEFAULT, LNG_DEFAULT], ZOOM_INICIAL);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 19
+  }).addTo(mapa);
+
+  // Intentar centrar en ubicación real del usuario
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(pos => {
+      mapa.setView([pos.coords.latitude, pos.coords.longitude], ZOOM_INICIAL);
+    });
+  }
+
+  // ── Capas de dibujo ───────────────────────────────────────────
+  const capasDibujadas = new L.FeatureGroup().addTo(mapa);
+
+  const controlDibujo = new L.Control.Draw({
+    position: 'topleft',
+    draw: {
+      circle:    { shapeOptions: { color: '#e63946', fillOpacity: 0.18 } },
+      polygon:   false,
+      polyline:  false,
+      rectangle: false,
+      marker:    false,
+      circlemarker: false
+    },
+    edit: { featureGroup: capasDibujadas }
+  });
+  mapa.addControl(controlDibujo);
+
+  // ── Estado ────────────────────────────────────────────────────
+  let circuloActual = null;
+
+  // ── Eventos de dibujo ─────────────────────────────────────────
+  mapa.on(L.Draw.Event.CREATED, function (e) {
+    limpiarCirculo(false);           // elimina anterior sin resetear UI
+    circuloActual = e.layer;
+    capasDibujadas.addLayer(circuloActual);
+    actualizarInfo();
+  });
+
+  mapa.on(L.Draw.Event.EDITED, function () { actualizarInfo(); });
+  mapa.on(L.Draw.Event.DELETED, function () {
+    circuloActual = null;
+    resetInfo();
+  });
+
+  // ── Funciones ─────────────────────────────────────────────────
+  function actualizarInfo() {
+    if (!circuloActual) return;
+    const c   = circuloActual.getLatLng();
+    const r   = circuloActual.getRadius();
+    const lat = c.lat.toFixed(6);
+    const lng = c.lng.toFixed(6);
+    const rad = Math.round(r);
+
+    document.getElementById('info').innerHTML =
+      `<strong>📍 Zona marcada</strong><br>
+       Centro: <b>${lat}, ${lng}</b><br>
+       Radio aprox.: <b>${rad} metros</b>`;
+
+    document.getElementById('btn-enviar').disabled = false;
+  }
+
+  function resetInfo() {
+    document.getElementById('info').textContent =
+      'Dibuja un círculo sobre la zona del alboroto para obtener las coordenadas.';
+    document.getElementById('btn-enviar').disabled = true;
+  }
+
+  function limpiarCirculo(resetear = true) {
+    capasDibujadas.clearLayers();
+    circuloActual = null;
+    if (resetear) resetInfo();
+  }
+
+  function enviarWhatsApp() {
+    if (!circuloActual) return;
+    const c   = circuloActual.getLatLng();
+    const r   = circuloActual.getRadius();
+    const lat = c.lat.toFixed(6);
+    const lng = c.lng.toFixed(6);
+    const rad = Math.round(r);
+
+    const maps = `https://maps.google.com/?q=${lat},${lng}`;
+
+    const msg =
+      `🚨 *ALERTA DE ALBOROTO*\n\n` +
+      `📍 *Coordenadas del centro:*\n` +
+      `Latitud: ${lat}\n` +
+      `Longitud: ${lng}\n\n` +
+      `📏 *Radio aproximado:* ${rad} metros\n\n` +
+      `🗺️ *Ver en Google Maps:*\n${maps}\n\n` +
+      `⏰ ${new Date().toLocaleString('es-EC', {timeZone:'America/Guayaquil'})}`;
+
+    const url = `https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank');
+  }
+</script>
+</body>
+</html>
