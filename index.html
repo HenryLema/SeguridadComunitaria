@@ -161,7 +161,7 @@
 <header>
   <div class="pulse-icon"></div>
   <div>
-    <h1>ALERTA <span>ALBOROTO</span></h1>
+    <h1>ALERTA <span>ROJA</span></h1>
   </div>
 </header>
 
@@ -200,7 +200,7 @@
   const mapa = L.map('mapa').setView([LAT_DEFAULT, LNG_DEFAULT], ZOOM_INICIAL);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">RedOtavalo</a>',
     maxZoom: 19
   }).addTo(mapa);
 
@@ -255,7 +255,7 @@
     const rad = Math.round(r);
 
     document.getElementById('info').innerHTML =
-      `<strong>📍 Zona marcada</strong><br>
+      `<strong>📍 Zona Marcada</strong><br>
        Centro: <b>${lat}, ${lng}</b><br>
        Radio aprox.: <b>${rad} metros</b>`;
 
