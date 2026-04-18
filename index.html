@@ -285,12 +285,12 @@
     const maps = `https://maps.google.com/?q=${lat},${lng}`;
 
     const msg =
-      `🚨 *ALERTA DE ALBOROTO*\n\n` +
-      `📍 *Coordenadas del centro:*\n` +
+      `🚨 *Alerta Roja*\n\n` +
+      `📍 *Coordenadas Centro:*\n` +
       `Latitud: ${lat}\n` +
       `Longitud: ${lng}\n\n` +
-      `📏 *Radio aproximado:* ${rad} metros\n\n` +
-      `🗺️ *Ver en Google Maps:*\n${maps}\n\n` +
+      `📏 *Radio Aproximado:* ${rad} metros\n\n` +
+      `🗺️ *Google Maps:*\n${maps}\n\n` +
       `⏰ ${new Date().toLocaleString('es-EC', {timeZone:'America/Guayaquil'})}`;
 
     const url = `https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(msg)}`;
