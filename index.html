@@ -120,7 +120,7 @@
       position: absolute;
       bottom: 0; left: 0; right: 0;
       z-index: 1000;
-      background: rgba(22, 33, 62, 0.6);
+      background: rgba(22, 33, 62, 0.0);
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
       border-top: 1.5px solid rgba(15,52,96,.7);
@@ -401,7 +401,7 @@ function renderRecorrido(puntos) {
 refMapa.on('value', snapshot => {
   const datos = snapshot.val();
   estadoEl.className   = 'conectado';
-  estadoEl.textContent = '🟢 Sincronizado en tiempo real';
+  estadoEl.textContent = '🟢 Sincronizado en Tiempo Real';
 
   if (!datos) {
     capasDibujadas.clearLayers();
