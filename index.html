@@ -30,7 +30,6 @@
       overflow: hidden;
     }
 
-    /* HEADER TRANSPARENTE FLOTANTE */
     header {
       position: absolute;
       top: 0; left: 0; right: 0;
@@ -74,7 +73,6 @@
     }
     header h1 span { color: var(--rojo); }
 
-    /* INSTRUCCION TRANSPARENTE FLOTANTE */
     .instruccion {
       position: absolute;
       top: 52px; left: 0; right: 0;
@@ -89,7 +87,6 @@
       letter-spacing: .5px;
     }
 
-    /* ESTADO SYNC FLOTANTE */
     #estado-sync {
       position: absolute;
       top: 86px; left: 50%; transform: translateX(-50%);
@@ -107,7 +104,6 @@
     #estado-sync.conectado { color: #4caf50; }
     #estado-sync.error     { color: var(--rojo); }
 
-    /* MAPA ocupa todo */
     #mapa {
       flex: 1;
       width: 100%;
@@ -115,7 +111,6 @@
       z-index: 1;
     }
 
-    /* PANEL INFERIOR TRANSPARENTE */
     #panel {
       position: absolute;
       bottom: 0; left: 0; right: 0;
@@ -140,7 +135,6 @@
     }
     #info strong { color: var(--acento); font-size: .84rem; }
 
-    /* Botones — SIN sombras */
     #btn-enviar {
       background: #25D366;
       color: #fff;
@@ -200,7 +194,6 @@
       50%      { opacity: .5; }
     }
 
-    /* Quitar sombras de los controles de Leaflet Draw */
     .leaflet-control-container .leaflet-bar,
     .leaflet-control-container .leaflet-bar a,
     .leaflet-touch .leaflet-bar {
@@ -251,9 +244,7 @@ function sonar(tipo) {
   const t = ctx.currentTime;
 
   if (tipo === 'circulo') {
-    // Tono agudo corto tipo "ping"
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
+    const o = ctx.createOscillator(), g = ctx.createGain();
     o.connect(g); g.connect(ctx.destination);
     o.type = 'sine'; o.frequency.setValueAtTime(880, t);
     o.frequency.exponentialRampToValueAtTime(1320, t + 0.08);
@@ -262,10 +253,8 @@ function sonar(tipo) {
     o.start(t); o.stop(t + 0.2);
 
   } else if (tipo === 'recorrido') {
-    // Dos notas ascendentes tipo "inicio de acción"
     [440, 660].forEach((freq, i) => {
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
+      const o = ctx.createOscillator(), g = ctx.createGain();
       o.connect(g); g.connect(ctx.destination);
       o.type = 'triangle'; o.frequency.value = freq;
       const s = t + i * 0.1;
@@ -275,9 +264,7 @@ function sonar(tipo) {
     });
 
   } else if (tipo === 'limpiar') {
-    // Glide descendente tipo "borrar"
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
+    const o = ctx.createOscillator(), g = ctx.createGain();
     o.connect(g); g.connect(ctx.destination);
     o.type = 'sawtooth';
     o.frequency.setValueAtTime(600, t);
@@ -287,10 +274,8 @@ function sonar(tipo) {
     o.start(t); o.stop(t + 0.3);
 
   } else if (tipo === 'enviar') {
-    // Acorde positivo tipo "enviado"
     [523, 659, 784].forEach((freq, i) => {
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
+      const o = ctx.createOscillator(), g = ctx.createGain();
       o.connect(g); g.connect(ctx.destination);
       o.type = 'sine'; o.frequency.value = freq;
       const s = t + i * 0.07;
@@ -300,19 +285,28 @@ function sonar(tipo) {
     });
 
   } else if (tipo === 'mapa') {
-    // Click seco tipo "tac"
-    const b = ctx.createOscillator();
-    const g = ctx.createGain();
+    const b = ctx.createOscillator(), g = ctx.createGain();
     b.connect(g); g.connect(ctx.destination);
     b.type = 'square'; b.frequency.setValueAtTime(200, t);
     b.frequency.exponentialRampToValueAtTime(60, t + 0.05);
     g.gain.setValueAtTime(0.18, t);
     g.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
     b.start(t); b.stop(t + 0.07);
+
+  } else if (tipo === 'alerta') {
+    // Sirena corta para dispositivos receptores
+    [440, 554, 659, 880].forEach((freq, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'sine'; o.frequency.value = freq;
+      const s = t + i * 0.13;
+      g.gain.setValueAtTime(0.3, s);
+      g.gain.exponentialRampToValueAtTime(0.001, s + 0.2);
+      o.start(s); o.stop(s + 0.22);
+    });
   }
 }
 
-// Sonido al pulsar botones del mapa (Leaflet Draw toolbar)
 document.addEventListener('click', function(e) {
   const esBotonMapa = e.target.closest('.leaflet-draw-toolbar') ||
                       e.target.closest('.leaflet-draw-actions') ||
@@ -332,8 +326,8 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-const db      = firebase.database();
-const refMapa = db.ref('alertas/activa');
+const db       = firebase.database();
+const refMapa  = db.ref('alertas/activa');
 const estadoEl = document.getElementById('estado-sync');
 
 // ── Configuración ───────────────────────────────────────────────
@@ -341,6 +335,9 @@ const WHATSAPP_NUMS = ['593963761330', '59399591992', '59399591993'];
 const ZOOM_INICIAL  = 18;
 const LAT_DEFAULT   = 0.23311819176648024;
 const LNG_DEFAULT   = -78.26155393719128;
+
+// ID único por dispositivo — el que dibuja no se mueve
+const MI_ID = 'usr_' + Math.random().toString(36).substr(2, 9);
 
 // ── Mapa ────────────────────────────────────────────────────────
 const mapa = L.map('mapa').setView([LAT_DEFAULT, LNG_DEFAULT], ZOOM_INICIAL);
@@ -378,6 +375,7 @@ let circuloActual   = null;
 let recorridoActual = null;
 let modoRecorrido   = false;
 let puntosRecorrido = [];
+let cargaInicial    = true;  // ignora el primer disparo de Firebase al abrir
 
 // ── Helpers render ────────────────────────────────────────────────
 function renderCirculo(datos) {
@@ -397,7 +395,27 @@ function renderRecorrido(puntos) {
   capasDibujadas.addLayer(recorridoActual);
 }
 
-// ── Firebase: escuchar ────────────────────────────────────────────
+// ── Auto-posicionamiento para receptores ──────────────────────────
+function volarAlIncidente(datos, autor) {
+  if (autor === MI_ID) return;  // el que dibujó no se mueve
+
+  if (datos.circulo) {
+    mapa.flyTo([datos.circulo.lat, datos.circulo.lng], 18, { animate: true, duration: 1.2 });
+  } else if (datos.recorrido && datos.recorrido.length > 0) {
+    mapa.flyTo([datos.recorrido[0].lat, datos.recorrido[0].lng], 18, { animate: true, duration: 1.2 });
+  }
+
+  sonar('alerta');
+
+  estadoEl.textContent = '🚨 ¡NUEVO INCIDENTE! Mapa actualizado';
+  estadoEl.className   = 'error';
+  setTimeout(() => {
+    estadoEl.textContent = '🟢 Sincronizado en Tiempo Real';
+    estadoEl.className   = 'conectado';
+  }, 3000);
+}
+
+// ── Firebase: escuchar cambios ────────────────────────────────────
 refMapa.on('value', snapshot => {
   const datos = snapshot.val();
   estadoEl.className   = 'conectado';
@@ -406,10 +424,19 @@ refMapa.on('value', snapshot => {
   if (!datos) {
     capasDibujadas.clearLayers();
     circuloActual = null; recorridoActual = null; puntosRecorrido = [];
+    cargaInicial = false;
     resetInfo(); return;
   }
-  if (datos.circulo)                         renderCirculo(datos.circulo);
+
+  if (datos.circulo)                                 renderCirculo(datos.circulo);
   if (datos.recorrido && datos.recorrido.length > 1) renderRecorrido(datos.recorrido);
+
+  // Solo volar si NO es la carga inicial al abrir la página
+  if (!cargaInicial) {
+    volarAlIncidente(datos, datos.autor || '');
+  }
+  cargaInicial = false;
+
   actualizarInfo();
 
 }, error => {
@@ -417,16 +444,16 @@ refMapa.on('value', snapshot => {
   estadoEl.textContent = '🔴 Sin conexión';
 });
 
-// ── Firebase: publicar ────────────────────────────────────────────
+// ── Firebase: publicar (guarda quién dibujó) ──────────────────────
 function publicarEstado() {
-  const payload = {};
+  const payload = { autor: MI_ID };
   if (circuloActual) {
     const c = circuloActual.getLatLng();
     payload.circulo = { lat: c.lat, lng: c.lng, radio: circuloActual.getRadius() };
   }
   if (recorridoActual && puntosRecorrido.length > 1)
     payload.recorrido = puntosRecorrido.map(p => ({ lat: p.lat, lng: p.lng }));
-  if (Object.keys(payload).length > 0) refMapa.set(payload);
+  if (Object.keys(payload).length > 1) refMapa.set(payload);
 }
 
 // ── Eventos círculo ────────────────────────────────────────────────
