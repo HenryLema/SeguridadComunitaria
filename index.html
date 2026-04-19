@@ -13,16 +13,15 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --rojo:     #e63946;
-      --oscuro:   #1a1a2e;
-      --panel:    #16213e;
-      --borde:    #0f3460;
+      --panel:    rgba(10, 18, 40, 0.72);
+      --borde:    rgba(15, 52, 96, 0.7);
       --texto:    #eaeaea;
       --acento:   #f4a261;
       --amarillo: #f4d03f;
     }
     body {
       font-family: 'Barlow', sans-serif;
-      background: var(--oscuro);
+      background: transparent;
       color: var(--texto);
       height: 100dvh;
       display: flex;
@@ -31,16 +30,17 @@
     }
     header {
       background: var(--panel);
-      border-bottom: 3px solid var(--rojo);
-      padding: 10px 20px;
+      border-bottom: 2px solid var(--rojo);
+      padding: 8px 16px;
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
       flex-shrink: 0;
-      box-shadow: 0 4px 20px rgba(230,57,70,.35);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
     }
     .pulse-icon {
-      width: 36px; height: 36px;
+      width: 32px; height: 32px;
       background: var(--rojo);
       border-radius: 50%;
       position: relative;
@@ -52,15 +52,15 @@
       position: absolute; inset: 0;
       display: flex; align-items: center; justify-content: center;
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 22px; color: #fff;
+      font-size: 20px; color: #fff;
     }
     @keyframes pulso {
-      0%,100% { box-shadow: 0 0 0 0 rgba(230,57,70,.7); }
-      50%      { box-shadow: 0 0 0 12px rgba(230,57,70,0); }
+      0%,100% { box-shadow: 0 0 0 0 rgba(230,57,70,.6); }
+      50%      { box-shadow: 0 0 0 10px rgba(230,57,70,0); }
     }
     header h1 {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(1.3rem, 4vw, 1.9rem);
+      font-size: clamp(1.2rem, 4vw, 1.8rem);
       letter-spacing: 3px;
       color: var(--texto);
       line-height: 1;
@@ -69,98 +69,104 @@
     .instruccion {
       background: var(--borde);
       text-align: center;
-      font-size: .82rem;
-      padding: 6px 12px;
+      font-size: .78rem;
+      padding: 5px 12px;
       color: var(--acento);
-      letter-spacing: .5px;
+      letter-spacing: .4px;
       flex-shrink: 0;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
     }
     #estado-sync {
-      background: #0a1628;
+      background: rgba(5, 10, 25, 0.55);
       text-align: center;
-      font-size: .75rem;
-      padding: 4px 12px;
+      font-size: .72rem;
+      padding: 3px 12px;
       flex-shrink: 0;
-      color: #557;
-      transition: color .3s;
+      color: #6677aa;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
     }
-    #estado-sync.conectado  { color: #4caf50; }
-    #estado-sync.error      { color: var(--rojo); }
-    #mapa { flex: 1; width: 100%; position: relative; }
+    #estado-sync.conectado { color: #4caf50; }
+    #estado-sync.error     { color: var(--rojo); }
+    #mapa { flex: 1; width: 100%; position: relative; z-index: 0; }
     #panel {
       background: var(--panel);
-      border-top: 2px solid var(--borde);
-      padding: 10px 16px;
+      border-top: 1.5px solid var(--borde);
+      padding: 8px 14px;
       flex-shrink: 0;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
     }
     #info {
       flex: 1;
-      min-width: 200px;
-      font-size: .82rem;
+      min-width: 180px;
+      font-size: .78rem;
       color: #aac;
-      line-height: 1.5;
+      line-height: 1.4;
     }
-    #info strong { color: var(--acento); font-size: .88rem; }
+    #info strong { color: var(--acento); font-size: .84rem; }
     #btn-enviar {
       background: #25D366;
       color: #fff;
       border: none;
-      border-radius: 8px;
-      padding: 11px 22px;
+      border-radius: 7px;
+      padding: 10px 18px;
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.1rem;
+      font-size: 1rem;
       letter-spacing: 2px;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 8px;
-      transition: transform .15s, box-shadow .15s;
-      box-shadow: 0 4px 14px rgba(37,211,102,.4);
+      gap: 7px;
+      transition: opacity .15s;
       white-space: nowrap;
     }
-    #btn-enviar:hover  { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37,211,102,.55); }
-    #btn-enviar:active { transform: translateY(0); }
-    #btn-enviar:disabled { background: #444; box-shadow: none; cursor: not-allowed; opacity: .6; }
+    #btn-enviar:hover  { opacity: .88; }
+    #btn-enviar:active { opacity: .7; }
+    #btn-enviar:disabled { background: #445; cursor: not-allowed; opacity: .5; }
     #btn-limpiar {
       background: transparent;
       border: 1.5px solid var(--rojo);
       color: var(--rojo);
-      border-radius: 8px;
-      padding: 10px 16px;
+      border-radius: 7px;
+      padding: 9px 14px;
       font-family: 'Barlow', sans-serif;
-      font-size: .85rem;
+      font-size: .82rem;
       font-weight: 600;
       cursor: pointer;
       transition: background .15s;
     }
-    #btn-limpiar:hover { background: rgba(230,57,70,.15); }
+    #btn-limpiar:hover  { background: rgba(230,57,70,.15); }
+    #btn-limpiar:active { background: rgba(230,57,70,.3); }
     #btn-recorrido {
       background: transparent;
       border: 1.5px solid var(--amarillo);
       color: var(--amarillo);
-      border-radius: 8px;
-      padding: 10px 16px;
+      border-radius: 7px;
+      padding: 9px 14px;
       font-family: 'Barlow', sans-serif;
-      font-size: .85rem;
+      font-size: .82rem;
       font-weight: 600;
       cursor: pointer;
       transition: background .15s;
       white-space: nowrap;
     }
-    #btn-recorrido:hover { background: rgba(244,208,63,.15); }
+    #btn-recorrido:hover  { background: rgba(244,208,63,.15); }
+    #btn-recorrido:active { background: rgba(244,208,63,.3); }
     #btn-recorrido.activo {
-      background: rgba(244,208,63,.25);
+      background: rgba(244,208,63,.22);
       border-color: #fff176;
       color: #fff176;
       animation: parpadeo .8s ease-in-out infinite;
     }
     @keyframes parpadeo {
       0%,100% { opacity: 1; }
-      50%      { opacity: .55; }
+      50%      { opacity: .5; }
     }
     .leaflet-interactive { stroke: var(--rojo) !important; fill: rgba(230,57,70,.18) !important; }
   </style>
@@ -182,10 +188,10 @@
 
 <div id="panel">
   <div id="info">Dibuja un círculo o activa el recorrido para marcar la zona del incidente.</div>
-  <button id="btn-recorrido" onclick="toggleRecorrido()">🚶 RECORRIDO SOSPECHOSO</button>
-  <button id="btn-limpiar" onclick="limpiarTodo()">🗑️ Borrar</button>
-  <button id="btn-enviar" disabled onclick="enviarWhatsApp()">
-    <svg width="20" height="20" viewBox="0 0 32 32" fill="currentColor">
+  <button id="btn-recorrido" onclick="beep();toggleRecorrido()">🚶 RECORRIDO SOSPECHOSO</button>
+  <button id="btn-limpiar"   onclick="beep();limpiarTodo()">🗑️ Borrar</button>
+  <button id="btn-enviar" disabled onclick="beep();enviarWhatsApp()">
+    <svg width="18" height="18" viewBox="0 0 32 32" fill="currentColor">
       <path d="M16 0C7.163 0 0 7.163 0 16c0 2.824.737 5.476 2.027 7.782L0 32l8.418-2.006A15.94 15.94 0 0016 32c8.837 0 16-7.163 16-16S24.837 0 16 0zm8.29 22.617c-.348.977-2.04 1.865-2.813 1.98-.719.107-1.623.152-2.617-.165-.602-.195-1.375-.455-2.363-.893-4.151-1.793-6.862-5.96-7.072-6.237-.206-.277-1.677-2.232-1.677-4.255 0-2.024 1.063-3.02 1.44-3.43.378-.41.823-.513 1.098-.513.274 0 .548.003.788.014.253.012.592-.097.927.707.348.83 1.183 2.855 1.287 3.063.104.208.174.452.035.73-.14.277-.21.45-.417.693-.208.243-.437.542-.623.727-.208.208-.424.433-.182.85.243.416 1.079 1.78 2.317 2.883 1.59 1.418 2.933 1.857 3.35 2.065.416.208.658.174.9-.104.243-.277 1.044-1.218 1.322-1.634.277-.416.554-.347.935-.208.38.138 2.413 1.138 2.828 1.345.416.208.693.312.796.487.104.174.104 1.009-.244 1.986z"/>
     </svg>
     ENVIAR POR WHATSAPP
@@ -194,13 +200,29 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
-
-<!-- Firebase SDK (modo compat para usar sin bundler) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
 <script>
-// ── Firebase ────────────────────────────────────────────────────
+// ── Sonido de botón (Web Audio API, sin archivos externos) ────────
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function beep() {
+  try {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g);
+    g.connect(audioCtx.destination);
+    o.type = 'sine';
+    o.frequency.setValueAtTime(880, audioCtx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.08);
+    g.gain.setValueAtTime(0.25, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+    o.start(audioCtx.currentTime);
+    o.stop(audioCtx.currentTime + 0.13);
+  } catch(e) {}
+}
+
+// ── Firebase ──────────────────────────────────────────────────────
 const firebaseConfig = {
   apiKey:            "AIzaSyA_KtZk_UtY1ub33hs1Ub_bUw7PBBOGViM",
   authDomain:        "seguridadcomunitaria-6e360.firebaseapp.com",
@@ -210,21 +232,19 @@ const firebaseConfig = {
   appId:             "1:788418223348:web:899bc4e0deafdcfc7152a1",
   databaseURL:       "https://seguridadcomunitaria-6e360-default-rtdb.firebaseio.com"
 };
-
 firebase.initializeApp(firebaseConfig);
-const db        = firebase.database();
-const refMapa   = db.ref('alertas/activa');
-const estadoEl  = document.getElementById('estado-sync');
+const db       = firebase.database();
+const refMapa  = db.ref('alertas/activa');
+const estadoEl = document.getElementById('estado-sync');
 
-// ── Configuración ───────────────────────────────────────────────
+// ── Configuración ─────────────────────────────────────────────────
 const WHATSAPP_NUMS = ['593963761330', '59399591992', '59399591993'];
 const ZOOM_INICIAL  = 18;
 const LAT_DEFAULT   = 0.23311819176648024;
 const LNG_DEFAULT   = -78.26155393719128;
 
-// ── Mapa ────────────────────────────────────────────────────────
+// ── Mapa ──────────────────────────────────────────────────────────
 const mapa = L.map('mapa').setView([LAT_DEFAULT, LNG_DEFAULT], ZOOM_INICIAL);
-
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© <a href="https://www.openstreetmap.org/copyright">RedOtavalo</a>',
   maxZoom: 19
@@ -236,9 +256,8 @@ if (navigator.geolocation) {
   });
 }
 
-// ── Capas ────────────────────────────────────────────────────────
+// ── Capas ─────────────────────────────────────────────────────────
 const capasDibujadas = new L.FeatureGroup().addTo(mapa);
-
 const controlDibujo = new L.Control.Draw({
   position: 'topleft',
   draw: {
@@ -253,20 +272,17 @@ const controlDibujo = new L.Control.Draw({
 });
 mapa.addControl(controlDibujo);
 
-// ── Estado local ─────────────────────────────────────────────────
+// ── Estado local ──────────────────────────────────────────────────
 let circuloActual   = null;
 let recorridoActual = null;
 let modoRecorrido   = false;
 let puntosRecorrido = [];
-let esMiDibujo      = false;   // para no re-renderizar lo que yo mismo publiqué
 
-// ── Helpers de render ─────────────────────────────────────────────
+// ── Render desde Firebase ─────────────────────────────────────────
 function renderCirculo(datos) {
   if (circuloActual) capasDibujadas.removeLayer(circuloActual);
   circuloActual = L.circle([datos.lat, datos.lng], {
-    radius:      datos.radio,
-    color:       '#e63946',
-    fillOpacity: 0.18
+    radius: datos.radio, color: '#e63946', fillOpacity: 0.18
   });
   capasDibujadas.addLayer(circuloActual);
 }
@@ -280,15 +296,13 @@ function renderRecorrido(puntos) {
   capasDibujadas.addLayer(recorridoActual);
 }
 
-// ── Firebase: escuchar cambios en tiempo real ─────────────────────
+// ── Firebase: escuchar ────────────────────────────────────────────
 refMapa.on('value', snapshot => {
   const datos = snapshot.val();
-
-  estadoEl.className  = 'conectado';
+  estadoEl.className   = 'conectado';
   estadoEl.textContent = '🟢 Sincronizado en tiempo real';
 
   if (!datos) {
-    // Alguien limpió el mapa
     capasDibujadas.clearLayers();
     circuloActual   = null;
     recorridoActual = null;
@@ -296,39 +310,28 @@ refMapa.on('value', snapshot => {
     resetInfo();
     return;
   }
-
-  if (datos.circulo) renderCirculo(datos.circulo);
+  if (datos.circulo)                          renderCirculo(datos.circulo);
   if (datos.recorrido && datos.recorrido.length > 1) renderRecorrido(datos.recorrido);
   actualizarInfo();
-
 }, error => {
-  estadoEl.className  = 'error';
-  estadoEl.textContent = '🔴 Error de conexión: ' + error.message;
+  estadoEl.className   = 'error';
+  estadoEl.textContent = '🔴 Error: ' + error.message;
 });
 
-// ── Firebase: publicar datos ───────────────────────────────────────
+// ── Firebase: publicar ────────────────────────────────────────────
 function publicarEstado() {
   const payload = {};
-
   if (circuloActual) {
     const c = circuloActual.getLatLng();
-    payload.circulo = {
-      lat:   c.lat,
-      lng:   c.lng,
-      radio: circuloActual.getRadius()
-    };
+    payload.circulo = { lat: c.lat, lng: c.lng, radio: circuloActual.getRadius() };
   }
-
   if (recorridoActual && puntosRecorrido.length > 1) {
     payload.recorrido = puntosRecorrido.map(p => ({ lat: p.lat, lng: p.lng }));
   }
-
-  if (Object.keys(payload).length > 0) {
-    refMapa.set(payload);
-  }
+  if (Object.keys(payload).length > 0) refMapa.set(payload);
 }
 
-// ── Eventos círculo (Leaflet Draw) ────────────────────────────────
+// ── Eventos círculo ───────────────────────────────────────────────
 mapa.on(L.Draw.Event.CREATED, function (e) {
   if (circuloActual) capasDibujadas.removeLayer(circuloActual);
   circuloActual = e.layer;
@@ -336,15 +339,13 @@ mapa.on(L.Draw.Event.CREATED, function (e) {
   publicarEstado();
   actualizarInfo();
 });
-
 mapa.on(L.Draw.Event.EDITED,  function () { publicarEstado(); actualizarInfo(); });
 mapa.on(L.Draw.Event.DELETED, function () { circuloActual = null; publicarEstado(); actualizarInfo(); });
 
-// ── Recorrido táctil / mouse ───────────────────────────────────────
+// ── Recorrido ─────────────────────────────────────────────────────
 function toggleRecorrido() {
   modoRecorrido = !modoRecorrido;
   const btn = document.getElementById('btn-recorrido');
-
   if (modoRecorrido) {
     btn.classList.add('activo');
     btn.textContent = '⏹ DETENER RECORRIDO';
@@ -362,13 +363,8 @@ function toggleRecorrido() {
   }
 }
 
-mapa.on('mousemove', function (e) {
-  if (!modoRecorrido) return;
-  agregarPunto(e.latlng);
-});
-mapa.on('mouseup', function () {
-  if (modoRecorrido) toggleRecorrido();
-});
+mapa.on('mousemove', function (e) { if (!modoRecorrido) return; agregarPunto(e.latlng); });
+mapa.on('mouseup',   function ()  { if (modoRecorrido) toggleRecorrido(); });
 
 const mapaEl = document.getElementById('mapa');
 mapaEl.addEventListener('touchmove', function (e) {
@@ -376,23 +372,15 @@ mapaEl.addEventListener('touchmove', function (e) {
   e.preventDefault();
   const touch = e.touches[0];
   const rect  = mapaEl.getBoundingClientRect();
-  const punto = mapa.containerPointToLatLng(
-    L.point(touch.clientX - rect.left, touch.clientY - rect.top)
-  );
-  agregarPunto(punto);
+  agregarPunto(mapa.containerPointToLatLng(L.point(touch.clientX - rect.left, touch.clientY - rect.top)));
 }, { passive: false });
-
-mapaEl.addEventListener('touchend', function () {
-  if (modoRecorrido) toggleRecorrido();
-});
+mapaEl.addEventListener('touchend', function () { if (modoRecorrido) toggleRecorrido(); });
 
 function agregarPunto(latlng) {
   if (puntosRecorrido.length > 0) {
-    const ultimo = puntosRecorrido[puntosRecorrido.length - 1];
-    if (mapa.distance(ultimo, latlng) < 3) return;
+    if (mapa.distance(puntosRecorrido[puntosRecorrido.length - 1], latlng) < 3) return;
   }
   puntosRecorrido.push(latlng);
-
   if (recorridoActual) capasDibujadas.removeLayer(recorridoActual);
   recorridoActual = L.polyline(puntosRecorrido, {
     color: '#f4d03f', weight: 4, opacity: .85, dashArray: '8, 6'
@@ -406,14 +394,12 @@ function actualizarInfo() {
   const tieneCirculo   = circuloActual !== null;
   const tieneRecorrido = recorridoActual !== null && puntosRecorrido.length > 1;
   if (!tieneCirculo && !tieneRecorrido) { resetInfo(); return; }
-
   let html = '';
   if (tieneCirculo) {
     const c = circuloActual.getLatLng();
-    const r = Math.round(circuloActual.getRadius());
     html += `<strong>📍 Zona Marcada</strong><br>
              Centro: <b>${c.lat.toFixed(6)}, ${c.lng.toFixed(6)}</b><br>
-             Radio aprox.: <b>${r} metros</b><br>`;
+             Radio aprox.: <b>${Math.round(circuloActual.getRadius())} metros</b><br>`;
   }
   if (tieneRecorrido) {
     const ini = puntosRecorrido[0];
@@ -440,7 +426,7 @@ function limpiarTodo() {
   recorridoActual = null;
   puntosRecorrido = [];
   if (modoRecorrido) toggleRecorrido();
-  refMapa.remove();   // borra en Firebase → todos ven el mapa limpio
+  refMapa.remove();
   resetInfo();
 }
 
@@ -451,34 +437,24 @@ function enviarWhatsApp() {
   if (!tieneCirculo && !tieneRecorrido) return;
 
   let msg = `🚨 *Alerta Roja*\n\n`;
-
   if (tieneCirculo) {
     const c   = circuloActual.getLatLng();
-    const lat = c.lat.toFixed(6);
-    const lng = c.lng.toFixed(6);
-    const r   = Math.round(circuloActual.getRadius());
-    msg +=
-      `📍 *Zona del Incidente:*\n` +
-      `Latitud: ${lat}\n` +
-      `Longitud: ${lng}\n` +
-      `Radio Aprox.: ${r} metros\n` +
-      `🗺️ https://maps.google.com/?q=${lat},${lng}\n\n`;
+    const lat = c.lat.toFixed(6), lng = c.lng.toFixed(6);
+    msg += `📍 *Zona del Incidente:*\nLatitud: ${lat}\nLongitud: ${lng}\n` +
+           `Radio Aprox.: ${Math.round(circuloActual.getRadius())} metros\n` +
+           `🗺️ https://maps.google.com/?q=${lat},${lng}\n\n`;
   }
-
   if (tieneRecorrido) {
     const ini = puntosRecorrido[0];
     const fin = puntosRecorrido[puntosRecorrido.length - 1];
-    msg +=
-      `🚶 *Recorrido Sospechoso:*\n` +
-      `Inicio: ${ini.lat.toFixed(6)}, ${ini.lng.toFixed(6)}\n` +
-      `🗺️ https://maps.google.com/?q=${ini.lat.toFixed(6)},${ini.lng.toFixed(6)}\n` +
-      `Fin: ${fin.lat.toFixed(6)}, ${fin.lng.toFixed(6)}\n` +
-      `🗺️ https://maps.google.com/?q=${fin.lat.toFixed(6)},${fin.lng.toFixed(6)}\n` +
-      `Puntos registrados: ${puntosRecorrido.length}\n\n`;
+    msg += `🚶 *Recorrido Sospechoso:*\n` +
+           `Inicio: ${ini.lat.toFixed(6)}, ${ini.lng.toFixed(6)}\n` +
+           `🗺️ https://maps.google.com/?q=${ini.lat.toFixed(6)},${ini.lng.toFixed(6)}\n` +
+           `Fin: ${fin.lat.toFixed(6)}, ${fin.lng.toFixed(6)}\n` +
+           `🗺️ https://maps.google.com/?q=${fin.lat.toFixed(6)},${fin.lng.toFixed(6)}\n` +
+           `Puntos registrados: ${puntosRecorrido.length}\n\n`;
   }
-
   msg += `⏰ ${new Date().toLocaleString('es-EC', {timeZone:'America/Guayaquil'})}`;
-
   WHATSAPP_NUMS.forEach(num => {
     window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank');
   });
