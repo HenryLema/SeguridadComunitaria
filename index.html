@@ -127,7 +127,7 @@
     }
     #info strong { color: var(--acento); font-size: .84rem; }
 
-    #btn- {
+    #btn-enviar {
       background: #25D366;
       color: #fff;
       border: none;
@@ -193,6 +193,11 @@
     }
 
     .leaflet-interactive { stroke: var(--rojo) !important; fill: rgba(230,57,70,.18) !important; }
+
+    /* ── Empuja los controles del mapa debajo del header ── */
+    .leaflet-top.leaflet-left {
+      top: 110px !important;
+    }
   </style>
 </head>
 <body>
