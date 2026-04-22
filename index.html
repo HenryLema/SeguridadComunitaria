@@ -34,9 +34,7 @@
       position: absolute;
       top: 0; left: 0; right: 0;
       z-index: 1000;
-      background: rgba(255, 255, 255, 0.0);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
+      background: rgba(26,26,46,0.92);
       border-bottom: 2px solid rgba(230,57,70,.5);
       padding: 8px 16px;
       display: flex;
@@ -77,9 +75,7 @@
       position: absolute;
       top: 52px; left: 0; right: 0;
       z-index: 999;
-      background: rgba(255, 255, 255, 0.0);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
+      background: rgba(26,26,46,0.88);
       text-align: center;
       font-size: .78rem;
       padding: 5px 12px;
@@ -91,9 +87,7 @@
       position: absolute;
       top: 86px; left: 50%; transform: translateX(-50%);
       z-index: 999;
-      background: rgba(255,255,255,0.0);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
+      background: rgba(26,26,46,0.85);
       border-radius: 20px;
       font-size: .72rem;
       padding: 3px 14px;
@@ -115,9 +109,7 @@
       position: absolute;
       bottom: 0; left: 0; right: 0;
       z-index: 1000;
-      background: rgba(255, 255, 255, 0.0);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
+      background: rgba(26,26,46,0.92);
       border-top: 1.5px solid rgba(15,52,96,.7);
       padding: 8px 12px;
       display: flex;
@@ -294,7 +286,6 @@ function sonar(tipo) {
     b.start(t); b.stop(t + 0.07);
 
   } else if (tipo === 'alerta') {
-    // Sirena corta para dispositivos receptores
     [440, 554, 659, 880].forEach((freq, i) => {
       const o = ctx.createOscillator(), g = ctx.createGain();
       o.connect(g); g.connect(ctx.destination);
@@ -336,7 +327,6 @@ const ZOOM_INICIAL  = 18;
 const LAT_DEFAULT   = 0.23311819176648024;
 const LNG_DEFAULT   = -78.26155393719128;
 
-// ID único por dispositivo — el que dibuja no se mueve
 const MI_ID = 'usr_' + Math.random().toString(36).substr(2, 9);
 
 // ── Mapa ────────────────────────────────────────────────────────
@@ -375,7 +365,7 @@ let circuloActual   = null;
 let recorridoActual = null;
 let modoRecorrido   = false;
 let puntosRecorrido = [];
-let cargaInicial    = true;  // ignora el primer disparo de Firebase al abrir
+let cargaInicial    = true;
 
 // ── Helpers render ────────────────────────────────────────────────
 function renderCirculo(datos) {
@@ -397,7 +387,7 @@ function renderRecorrido(puntos) {
 
 // ── Auto-posicionamiento para receptores ──────────────────────────
 function volarAlIncidente(datos, autor) {
-  if (autor === MI_ID) return;  // el que dibujó no se mueve
+  if (autor === MI_ID) return;
 
   if (datos.circulo) {
     mapa.flyTo([datos.circulo.lat, datos.circulo.lng], 18, { animate: true, duration: 1.2 });
@@ -431,7 +421,6 @@ refMapa.on('value', snapshot => {
   if (datos.circulo)                                 renderCirculo(datos.circulo);
   if (datos.recorrido && datos.recorrido.length > 1) renderRecorrido(datos.recorrido);
 
-  // Solo volar si NO es la carga inicial al abrir la página
   if (!cargaInicial) {
     volarAlIncidente(datos, datos.autor || '');
   }
@@ -444,7 +433,7 @@ refMapa.on('value', snapshot => {
   estadoEl.textContent = '🔴 Sin conexión';
 });
 
-// ── Firebase: publicar (guarda quién dibujó) ──────────────────────
+// ── Firebase: publicar ──────────────────────────────────────────
 function publicarEstado() {
   const payload = { autor: MI_ID };
   if (circuloActual) {
