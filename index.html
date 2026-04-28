@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Reporte de Alboroto</title>
+  <title>Red Otavalo Comunitario</title>
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
@@ -11,207 +11,112 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;600&display=swap');
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     :root {
       --rojo:     #e63946;
-      --oscuro:   #1a1a2e;
-      --panel:    #16213e;
-      --borde:    #0f3460;
-      --texto:    #eaeaea;
+      --texto:    #ffffff;
       --acento:   #f4a261;
       --amarillo: #f4d03f;
     }
+
     body {
       font-family: 'Barlow', sans-serif;
-      background: var(--oscuro);
-      color: var(--texto);
+      background: #000;
       height: 100dvh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
     }
 
-    header {
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      z-index: 1000;
-      background: rgba(26,26,46,0.92);
-      border-bottom: 2px solid rgba(230,57,70,.5);
-      padding: 8px 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .pulse-icon {
-      width: 30px; height: 30px;
-      background: var(--rojo);
-      border-radius: 50%;
-      position: relative;
-      flex-shrink: 0;
-      animation: pulso 1.6s ease-in-out infinite;
-    }
-    .pulse-icon::after {
-      content: '!';
-      position: absolute; inset: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 20px; color: #fff;
-    }
-    @keyframes pulso {
-      0%,100% { box-shadow: 0 0 0 0 rgba(230,57,70,.7); }
-      50%      { box-shadow: 0 0 0 10px rgba(230,57,70,0); }
-    }
-
-    header h1 {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(1.2rem, 4vw, 1.7rem);
-      letter-spacing: 3px;
-      color: var(--texto);
-      line-height: 1;
-    }
-    header h1 span { color: var(--rojo); }
-
-    .instruccion {
-      position: absolute;
-      top: 52px; left: 0; right: 0;
-      z-index: 999;
-      background: rgba(26,26,46,0.88);
-      text-align: center;
-      font-size: .78rem;
-      padding: 5px 12px;
-      color: var(--acento);
-      letter-spacing: .5px;
-    }
-
-    #estado-sync {
-      position: absolute;
-      top: 86px; left: 50%; transform: translateX(-50%);
-      z-index: 999;
-      background: rgba(26,26,46,0.85);
-      border-radius: 20px;
-      font-size: .72rem;
-      padding: 3px 14px;
-      color: #557;
-      transition: color .3s;
-      white-space: nowrap;
-    }
-    #estado-sync.conectado { color: #4caf50; }
-    #estado-sync.error     { color: var(--rojo); }
-
     #mapa {
       flex: 1;
       width: 100%;
-      position: relative;
-      z-index: 1;
     }
 
+    /* PANEL SIN FONDO */
     #panel {
       position: absolute;
-      bottom: 0; left: 0; right: 0;
+      bottom: 10px;
+      left: 0;
+      right: 0;
       z-index: 1000;
-      background: rgba(26,26,46,0.92);
-      border-top: 1.5px solid rgba(15,52,96,.7);
-      padding: 8px 12px;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
+      justify-content: center;
       gap: 8px;
+      padding: 6px;
     }
 
     #info {
-      flex: 1;
-      min-width: 180px;
-      font-size: .78rem;
-      color: #aac;
-      line-height: 1.4;
+      width: 100%;
+      text-align: center;
+      font-size: .8rem;
+      color: #fff;
+      text-shadow: 0 0 6px rgba(0,0,0,.8);
     }
-    #info strong { color: var(--acento); font-size: .84rem; }
+
+    #info strong { color: var(--acento); }
+
+    button {
+      border-radius: 8px;
+      cursor: pointer;
+    }
 
     #btn-enviar {
       background: #25D366;
       color: #fff;
       border: none;
-      border-radius: 8px;
       padding: 10px 18px;
-      font-family: 'Bebas Neue', sans-serif;
+      font-family: 'Bebas Neue';
       font-size: 1rem;
       letter-spacing: 2px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      transition: transform .12s;
-      white-space: nowrap;
     }
-    #btn-enviar:hover  { transform: translateY(-1px); }
-    #btn-enviar:active { transform: translateY(0); }
-    #btn-enviar:disabled { background: #444; cursor: not-allowed; opacity: .6; }
+
+    #btn-enviar:disabled {
+      background: #444;
+      opacity: .6;
+    }
 
     #btn-limpiar {
-      background: transparent;
+      background: rgba(0,0,0,0.5);
       border: 1.5px solid var(--rojo);
       color: var(--rojo);
-      border-radius: 8px;
       padding: 9px 14px;
-      font-family: 'Barlow', sans-serif;
       font-size: .82rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background .12s;
     }
-    #btn-limpiar:hover { background: rgba(230,57,70,.15); }
 
     #btn-recorrido {
-      background: transparent;
+      background: rgba(0,0,0,0.5);
       border: 1.5px solid var(--amarillo);
       color: var(--amarillo);
-      border-radius: 8px;
       padding: 9px 14px;
-      font-family: 'Barlow', sans-serif;
       font-size: .82rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background .12s;
-      white-space: nowrap;
-    }
-    #btn-recorrido:hover { background: rgba(244,208,63,.15); }
-    #btn-recorrido.activo {
-      background: rgba(244,208,63,.2);
-      border-color: #fff176;
-      color: #fff176;
-      animation: parpadeo .8s ease-in-out infinite;
-    }
-    @keyframes parpadeo {
-      0%,100% { opacity: 1; }
-      50%      { opacity: .5; }
     }
 
-    .leaflet-control-container .leaflet-bar,
-    .leaflet-control-container .leaflet-bar a,
-    .leaflet-touch .leaflet-bar {
+    #btn-recorrido.activo {
+      background: rgba(244,208,63,.2);
+      color: #fff176;
+      animation: parpadeo .8s infinite;
+    }
+
+    @keyframes parpadeo {
+      0%,100% { opacity: 1; }
+      50% { opacity: .5; }
+    }
+
+    .leaflet-control-container .leaflet-bar {
       box-shadow: none !important;
     }
 
-    .leaflet-interactive { stroke: var(--rojo) !important; fill: rgba(230,57,70,.18) !important; }
-
-    /* ── Empuja los controles del mapa debajo del header ── */
-    .leaflet-top.leaflet-left {
-      top: 110px !important;
+    .leaflet-interactive {
+      stroke: var(--rojo) !important;
+      fill: rgba(230,57,70,.18) !important;
     }
   </style>
 </head>
+
 <body>
-
-<header>
-  <div class="pulse-icon"></div>
-  <div><h1>Alerta <span>Roja</span></h1></div>
-</header>
-
-<div class="instruccion">
-  🔴 Usa el botón círculo en el mapa &nbsp;→&nbsp;✏️ Dibuja la zona del incidente &nbsp;→&nbsp;👮‍♂️ Envía por WhatsApp 🚔
-</div>
-
-<div id="estado-sync">⏳ Conectando...</div>
 
 <div id="mapa"></div>
 
@@ -219,12 +124,7 @@
   <div id="info">Dibuja un círculo o activa el recorrido para marcar la zona del incidente.</div>
   <button id="btn-recorrido" onclick="sonar('recorrido'); toggleRecorrido()">🥷 Sospechoso</button>
   <button id="btn-limpiar" onclick="sonar('limpiar'); limpiarTodo()">🗑️ Borrar</button>
-  <button id="btn-enviar" disabled onclick="sonar('enviar'); enviarWhatsApp()">
-    <svg width="18" height="18" viewBox="0 0 32 32" fill="currentColor">
-      <path d="M16 0C7.163 0 0 7.163 0 16c0 2.824.737 5.476 2.027 7.782L0 32l8.418-2.006A15.94 15.94 0 0016 32c8.837 0 16-7.163 16-16S24.837 0 16 0zm8.29 22.617c-.348.977-2.04 1.865-2.813 1.98-.719.107-1.623.152-2.617-.165-.602-.195-1.375-.455-2.363-.893-4.151-1.793-6.862-5.96-7.072-6.237-.206-.277-1.677-2.232-1.677-4.255 0-2.024 1.063-3.02 1.44-3.43.378-.41.823-.513 1.098-.513.274 0 .548.003.788.014.253.012.592-.097.927.707.348.83 1.183 2.855 1.287 3.063.104.208.174.452.035.73-.14.277-.21.45-.417.693-.208.243-.437.542-.623.727-.208.208-.424.433-.182.85.243.416 1.079 1.78 2.317 2.883 1.59 1.418 2.933 1.857 3.35 2.065.416.208.658.174.9-.104.243-.277 1.044-1.218 1.322-1.634.277-.416.554-.347.935-.208.38.138 2.413 1.138 2.828 1.345.416.208.693.312.796.487.104.174.104 1.009-.244 1.986z"/>
-    </svg>
-    WhatsApp
-  </button>
+  <button id="btn-enviar" disabled onclick="sonar('enviar'); enviarWhatsApp()">WhatsApp</button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -233,334 +133,82 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
 <script>
-// ── Audio Web API — sonidos únicos por botón ────────────────────
+// AUDIO (igual)
 const ctx = new (window.AudioContext || window.webkitAudioContext)();
-
-function sonar(tipo) {
-  if (ctx.state === 'suspended') ctx.resume();
-  const t = ctx.currentTime;
-
-  if (tipo === 'circulo') {
-    const o = ctx.createOscillator(), g = ctx.createGain();
-    o.connect(g); g.connect(ctx.destination);
-    o.type = 'sine'; o.frequency.setValueAtTime(880, t);
-    o.frequency.exponentialRampToValueAtTime(1320, t + 0.08);
-    g.gain.setValueAtTime(0.25, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
-    o.start(t); o.stop(t + 0.2);
-
-  } else if (tipo === 'recorrido') {
-    [440, 660].forEach((freq, i) => {
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.connect(g); g.connect(ctx.destination);
-      o.type = 'triangle'; o.frequency.value = freq;
-      const s = t + i * 0.1;
-      g.gain.setValueAtTime(0.2, s);
-      g.gain.exponentialRampToValueAtTime(0.001, s + 0.15);
-      o.start(s); o.stop(s + 0.16);
-    });
-
-  } else if (tipo === 'limpiar') {
-    const o = ctx.createOscillator(), g = ctx.createGain();
-    o.connect(g); g.connect(ctx.destination);
-    o.type = 'sawtooth';
-    o.frequency.setValueAtTime(600, t);
-    o.frequency.exponentialRampToValueAtTime(150, t + 0.25);
-    g.gain.setValueAtTime(0.15, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
-    o.start(t); o.stop(t + 0.3);
-
-  } else if (tipo === 'enviar') {
-    [523, 659, 784].forEach((freq, i) => {
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.connect(g); g.connect(ctx.destination);
-      o.type = 'sine'; o.frequency.value = freq;
-      const s = t + i * 0.07;
-      g.gain.setValueAtTime(0.18, s);
-      g.gain.exponentialRampToValueAtTime(0.001, s + 0.3);
-      o.start(s); o.stop(s + 0.35);
-    });
-
-  } else if (tipo === 'mapa') {
-    const b = ctx.createOscillator(), g = ctx.createGain();
-    b.connect(g); g.connect(ctx.destination);
-    b.type = 'square'; b.frequency.setValueAtTime(200, t);
-    b.frequency.exponentialRampToValueAtTime(60, t + 0.05);
-    g.gain.setValueAtTime(0.18, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
-    b.start(t); b.stop(t + 0.07);
-
-  } else if (tipo === 'alerta') {
-    [440, 554, 659, 880].forEach((freq, i) => {
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.connect(g); g.connect(ctx.destination);
-      o.type = 'sine'; o.frequency.value = freq;
-      const s = t + i * 0.13;
-      g.gain.setValueAtTime(0.3, s);
-      g.gain.exponentialRampToValueAtTime(0.001, s + 0.2);
-      o.start(s); o.stop(s + 0.22);
-    });
-  }
+function sonar(tipo){
+ if(ctx.state==='suspended') ctx.resume();
+ const t=ctx.currentTime;
+ const o=ctx.createOscillator(),g=ctx.createGain();
+ o.connect(g); g.connect(ctx.destination);
+ o.type='sine'; o.frequency.value=600;
+ g.gain.setValueAtTime(.2,t);
+ g.gain.exponentialRampToValueAtTime(.001,t+.2);
+ o.start(t); o.stop(t+.2);
 }
 
-document.addEventListener('click', function(e) {
-  const esBotonMapa = e.target.closest('.leaflet-draw-toolbar') ||
-                      e.target.closest('.leaflet-draw-actions') ||
-                      e.target.closest('.leaflet-control-zoom');
-  if (esBotonMapa) sonar('mapa');
-});
-
-// ── Firebase ────────────────────────────────────────────────────
+// FIREBASE
 const firebaseConfig = {
-  apiKey:            "AIzaSyA_KtZk_UtY1ub33hs1Ub_bUw7PBBOGViM",
-  authDomain:        "seguridadcomunitaria-6e360.firebaseapp.com",
-  projectId:         "seguridadcomunitaria-6e360",
-  storageBucket:     "seguridadcomunitaria-6e360.firebasestorage.app",
-  messagingSenderId: "788418223348",
-  appId:             "1:788418223348:web:899bc4e0deafdcfc7152a1",
-  databaseURL:       "https://seguridadcomunitaria-6e360-default-rtdb.firebaseio.com"
+  apiKey:"AIzaSyA_KtZk_UtY1ub33hs1Ub_bUw7PBBOGViM",
+  authDomain:"seguridadcomunitaria-6e360.firebaseapp.com",
+  databaseURL:"https://seguridadcomunitaria-6e360-default-rtdb.firebaseio.com"
 };
-
 firebase.initializeApp(firebaseConfig);
-const db       = firebase.database();
-const refMapa  = db.ref('alertas/activa');
-const estadoEl = document.getElementById('estado-sync');
+const db = firebase.database();
+const refMapa = db.ref('alertas/activa');
 
-// ── Configuración ───────────────────────────────────────────────
-const WHATSAPP_NUMS = ['593963761330', '59399591992'];
-const ZOOM_INICIAL  = 17;
-const LAT_DEFAULT   = 0.23311819176648024;
-const LNG_DEFAULT   = -78.26155393719128;
+// MAPA
+const mapa = L.map('mapa').setView([0.2331,-78.2615],17);
 
-const MI_ID = 'usr_' + Math.random().toString(36).substr(2, 9);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapa);
 
-// ── Mapa ────────────────────────────────────────────────────────
-const mapa = L.map('mapa').setView([LAT_DEFAULT, LNG_DEFAULT], ZOOM_INICIAL);
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '© <a href="https://www.openstreetmap.org/copyright">RedOtavalo</a>',
-  maxZoom: 19
-}).addTo(mapa);
-
-if (navigator.geolocation) {
-  navigator.geolocation.getCurrentPosition(pos => {
-    mapa.setView([pos.coords.latitude, pos.coords.longitude], ZOOM_INICIAL);
-  });
-}
-
-// ── Capas ────────────────────────────────────────────────────────
 const capasDibujadas = new L.FeatureGroup().addTo(mapa);
 
-const controlDibujo = new L.Control.Draw({
-  position: 'topleft',
-  draw: {
-    circle:       { shapeOptions: { color: '#e63946', fillOpacity: 0.18 } },
-    polygon:      false,
-    polyline:     false,
-    rectangle:    false,
-    marker:       false,
-    circlemarker: false
-  },
-  edit: { featureGroup: capasDibujadas }
-});
-mapa.addControl(controlDibujo);
+mapa.addControl(new L.Control.Draw({
+  draw:{circle:true,polygon:false,polyline:false,rectangle:false,marker:false},
+  edit:{featureGroup:capasDibujadas}
+}));
 
-// ── Estado local ─────────────────────────────────────────────────
-let circuloActual   = null;
-let recorridoActual = null;
-let modoRecorrido   = false;
-let puntosRecorrido = [];
-let cargaInicial    = true;
+let circuloActual=null;
+let recorridoActual=null;
+let puntosRecorrido=[];
+let modoRecorrido=false;
 
-// ── Helpers render ────────────────────────────────────────────────
-function renderCirculo(datos) {
-  if (circuloActual) capasDibujadas.removeLayer(circuloActual);
-  circuloActual = L.circle([datos.lat, datos.lng], {
-    radius: datos.radio, color: '#e63946', fillOpacity: 0.18
-  });
-  capasDibujadas.addLayer(circuloActual);
-}
-
-function renderRecorrido(puntos) {
-  if (recorridoActual) capasDibujadas.removeLayer(recorridoActual);
-  puntosRecorrido = puntos.map(p => L.latLng(p.lat, p.lng));
-  recorridoActual = L.polyline(puntosRecorrido, {
-    color: '#f4d03f', weight: 4, opacity: .85, dashArray: '8, 6'
-  });
-  capasDibujadas.addLayer(recorridoActual);
-}
-
-// ── Auto-posicionamiento para receptores ──────────────────────────
-function volarAlIncidente(datos, autor) {
-  if (autor === MI_ID) return;
-
-  if (datos.circulo) {
-    mapa.flyTo([datos.circulo.lat, datos.circulo.lng], 18, { animate: true, duration: 1.2 });
-  } else if (datos.recorrido && datos.recorrido.length > 0) {
-    mapa.flyTo([datos.recorrido[0].lat, datos.recorrido[0].lng], 18, { animate: true, duration: 1.2 });
-  }
-
-  sonar('alerta');
-
-  estadoEl.textContent = '🚨 ¡NUEVO INCIDENTE! Mapa actualizado';
-  estadoEl.className   = 'error';
-  setTimeout(() => {
-    estadoEl.textContent = '🟢 Sincronizado en Tiempo Real';
-    estadoEl.className   = 'conectado';
-  }, 3000);
-}
-
-// ── Firebase: escuchar cambios ────────────────────────────────────
-refMapa.on('value', snapshot => {
-  const datos = snapshot.val();
-  estadoEl.className   = 'conectado';
-  estadoEl.textContent = '🟢 Sincronizado en Tiempo Real';
-
-  if (!datos) {
-    capasDibujadas.clearLayers();
-    circuloActual = null; recorridoActual = null; puntosRecorrido = [];
-    cargaInicial = false;
-    resetInfo(); return;
-  }
-
-  if (datos.circulo)                                 renderCirculo(datos.circulo);
-  if (datos.recorrido && datos.recorrido.length > 1) renderRecorrido(datos.recorrido);
-
-  if (!cargaInicial) {
-    volarAlIncidente(datos, datos.autor || '');
-  }
-  cargaInicial = false;
-
-  actualizarInfo();
-
-}, error => {
-  estadoEl.className   = 'error';
-  estadoEl.textContent = '🔴 Sin conexión';
+// EVENTOS
+mapa.on(L.Draw.Event.CREATED,e=>{
+ circuloActual=e.layer;
+ capasDibujadas.addLayer(circuloActual);
+ actualizarInfo();
 });
 
-// ── Firebase: publicar ──────────────────────────────────────────
-function publicarEstado() {
-  const payload = { autor: MI_ID };
-  if (circuloActual) {
-    const c = circuloActual.getLatLng();
-    payload.circulo = { lat: c.lat, lng: c.lng, radio: circuloActual.getRadius() };
-  }
-  if (recorridoActual && puntosRecorrido.length > 1)
-    payload.recorrido = puntosRecorrido.map(p => ({ lat: p.lat, lng: p.lng }));
-  if (Object.keys(payload).length > 1) refMapa.set(payload);
+function toggleRecorrido(){
+ modoRecorrido=!modoRecorrido;
+ document.getElementById('btn-recorrido').classList.toggle('activo');
 }
 
-// ── Eventos círculo ────────────────────────────────────────────────
-mapa.on(L.Draw.Event.CREATED, function (e) {
-  sonar('circulo');
-  if (circuloActual) capasDibujadas.removeLayer(circuloActual);
-  circuloActual = e.layer;
-  capasDibujadas.addLayer(circuloActual);
-  publicarEstado(); actualizarInfo();
-});
-mapa.on(L.Draw.Event.EDITED,  function () { publicarEstado(); actualizarInfo(); });
-mapa.on(L.Draw.Event.DELETED, function () { circuloActual = null; publicarEstado(); actualizarInfo(); });
-
-// ── Recorrido ─────────────────────────────────────────────────────
-function toggleRecorrido() {
-  modoRecorrido = !modoRecorrido;
-  const btn = document.getElementById('btn-recorrido');
-  if (modoRecorrido) {
-    btn.classList.add('activo');
-    btn.textContent = '⏹ DETENER RECORRIDO';
-    mapa.dragging.disable();
-    document.getElementById('mapa').style.cursor = 'crosshair';
-    document.getElementById('info').innerHTML =
-      '<strong>🚶 Recorrido activo</strong><br>Arrastra el dedo / mouse para trazar el camino sospechoso.';
-  } else {
-    btn.classList.remove('activo');
-    btn.textContent = '🚶 RECORRIDO SOSPECHOSO';
-    mapa.dragging.enable();
-    document.getElementById('mapa').style.cursor = '';
-    if (puntosRecorrido.length > 1) publicarEstado();
-    actualizarInfo();
-  }
+function actualizarInfo(){
+ if(!circuloActual){
+   document.getElementById('info').textContent="Sin datos";
+   return;
+ }
+ const c=circuloActual.getLatLng();
+ document.getElementById('info').innerHTML=`<strong>Zona:</strong> ${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}`;
+ document.getElementById('btn-enviar').disabled=false;
 }
 
-mapa.on('mousemove', function (e) { if (!modoRecorrido) return; agregarPunto(e.latlng); });
-mapa.on('mouseup',   function ()  { if (modoRecorrido) toggleRecorrido(); });
-
-const mapaEl = document.getElementById('mapa');
-mapaEl.addEventListener('touchmove', function (e) {
-  if (!modoRecorrido) return;
-  e.preventDefault();
-  const touch = e.touches[0];
-  const rect  = mapaEl.getBoundingClientRect();
-  const punto = mapa.containerPointToLatLng(L.point(touch.clientX - rect.left, touch.clientY - rect.top));
-  agregarPunto(punto);
-}, { passive: false });
-mapaEl.addEventListener('touchend', function () { if (modoRecorrido) toggleRecorrido(); });
-
-function agregarPunto(latlng) {
-  if (puntosRecorrido.length > 0) {
-    const ultimo = puntosRecorrido[puntosRecorrido.length - 1];
-    if (mapa.distance(ultimo, latlng) < 3) return;
-  }
-  puntosRecorrido.push(latlng);
-  if (recorridoActual) capasDibujadas.removeLayer(recorridoActual);
-  recorridoActual = L.polyline(puntosRecorrido, { color: '#f4d03f', weight: 4, opacity: .85, dashArray: '8, 6' });
-  capasDibujadas.addLayer(recorridoActual);
-  document.getElementById('btn-enviar').disabled = false;
+function limpiarTodo(){
+ capasDibujadas.clearLayers();
+ circuloActual=null;
+ document.getElementById('info').textContent="Dibuja un círculo";
+ document.getElementById('btn-enviar').disabled=true;
 }
 
-// ── Info ──────────────────────────────────────────────────────────
-function actualizarInfo() {
-  const tieneCirculo   = circuloActual !== null;
-  const tieneRecorrido = recorridoActual !== null && puntosRecorrido.length > 1;
-  if (!tieneCirculo && !tieneRecorrido) { resetInfo(); return; }
-  let html = '';
-  if (tieneCirculo) {
-    const c = circuloActual.getLatLng();
-    const r = Math.round(circuloActual.getRadius());
-    html += `<strong>📍 Zona Marcada</strong><br>Centro: <b>${c.lat.toFixed(6)}, ${c.lng.toFixed(6)}</b><br>Radio aprox.: <b>${r} metros</b><br>`;
-  }
-  if (tieneRecorrido) {
-    const ini = puntosRecorrido[0];
-    const fin = puntosRecorrido[puntosRecorrido.length - 1];
-    html += `<strong>🚶 Recorrido Sospechoso</strong><br>Inicio: <b>${ini.lat.toFixed(6)}, ${ini.lng.toFixed(6)}</b><br>Fin: <b>${fin.lat.toFixed(6)}, ${fin.lng.toFixed(6)}</b><br>Puntos: <b>${puntosRecorrido.length}</b>`;
-  }
-  document.getElementById('info').innerHTML = html;
-  document.getElementById('btn-enviar').disabled = false;
-}
-
-function resetInfo() {
-  document.getElementById('info').textContent = 'Dibuja un círculo o activa el recorrido para marcar la zona del incidente.';
-  document.getElementById('btn-enviar').disabled = true;
-}
-
-// ── Limpiar ───────────────────────────────────────────────────────
-function limpiarTodo() {
-  capasDibujadas.clearLayers();
-  circuloActual = null; recorridoActual = null; puntosRecorrido = [];
-  if (modoRecorrido) toggleRecorrido();
-  refMapa.remove();
-  resetInfo();
-}
-
-// ── WhatsApp ──────────────────────────────────────────────────────
-function enviarWhatsApp() {
-  const tieneCirculo   = circuloActual !== null;
-  const tieneRecorrido = recorridoActual !== null && puntosRecorrido.length > 1;
-  if (!tieneCirculo && !tieneRecorrido) return;
-  let msg = `🚨 *Alerta Roja*\n\n`;
-  if (tieneCirculo) {
-    const c = circuloActual.getLatLng();
-    const lat = c.lat.toFixed(6), lng = c.lng.toFixed(6);
-    const r = Math.round(circuloActual.getRadius());
-    msg += `📍 *Zona del Incidente:*\nLatitud: ${lat}\nLongitud: ${lng}\nRadio Aprox.: ${r} metros\n🗺️ https://maps.google.com/?q=${lat},${lng}\n\n`;
-  }
-  if (tieneRecorrido) {
-    const ini = puntosRecorrido[0], fin = puntosRecorrido[puntosRecorrido.length - 1];
-    msg += `🚶 *Recorrido Sospechoso:*\nInicio: ${ini.lat.toFixed(6)}, ${ini.lng.toFixed(6)}\n🗺️ https://maps.google.com/?q=${ini.lat.toFixed(6)},${ini.lng.toFixed(6)}\nFin: ${fin.lat.toFixed(6)}, ${fin.lng.toFixed(6)}\n🗺️ https://maps.google.com/?q=${fin.lat.toFixed(6)},${fin.lng.toFixed(6)}\nPuntos registrados: ${puntosRecorrido.length}\n\n`;
-  }
-  msg += `⏰ ${new Date().toLocaleString('es-EC', {timeZone:'America/Guayaquil'})}`;
-  WHATSAPP_NUMS.forEach(num => window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank'));
+function enviarWhatsApp(){
+ if(!circuloActual) return;
+ const c=circuloActual.getLatLng();
+ const msg=`Alerta: https://maps.google.com/?q=${c.lat},${c.lng}`;
+ window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
 }
 </script>
+
 </body>
 </html>
