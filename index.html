@@ -335,10 +335,11 @@ const MI_ID = 'usr_' + Math.random().toString(36).substr(2, 9);
 
 // ── Mapa ────────────────────────────────────────────────────────
 const mapa = L.map('mapa', { attributionControl: false }).setView([LAT_DEFAULT, LNG_DEFAULT], ZOOM_INICIAL);
-L.control.attribution({ prefix: '© <a href="https://www.openstreetmap.org/copyright">RedOtavalo</a>' }).addTo(mapa);
+L.control.attribution({ prefix: false, position: 'bottomright' }).addTo(mapa);
+mapa.attributionControl.setPrefix('RedOtavalo');
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '© <a href="https://www.openstreetmap.org/copyright">RedOtavalo</a>',
+  attribution: '',
   maxZoom: 19
 }).addTo(mapa);
 
