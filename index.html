@@ -30,12 +30,13 @@
       overflow: hidden;
     }
 
+    /* HEADER — transparente */
     header {
       position: absolute;
       top: 0; left: 0; right: 0;
       z-index: 1000;
-      background: rgba(26,26,46,0.92);
-      border-bottom: 2px solid rgba(230,57,70,.5);
+      background: transparent;
+      border-bottom: 1.5px solid rgba(230,57,70,.4);
       padding: 8px 16px;
       display: flex;
       align-items: center;
@@ -66,38 +67,44 @@
       font-family: 'Bebas Neue', sans-serif;
       font-size: clamp(1.2rem, 4vw, 1.7rem);
       letter-spacing: 3px;
-      color: var(--texto);
+      color: #fff;
       line-height: 1;
+      text-shadow: 0 1px 6px rgba(0,0,0,.9);
     }
     header h1 span { color: var(--rojo); }
 
+    /* INSTRUCCION — transparente */
     .instruccion {
       position: absolute;
-      top: 52px; left: 0; right: 0;
+      top: 50px; left: 0; right: 0;
       z-index: 999;
-      background: rgba(26,26,46,0.88);
+      background: transparent;
       text-align: center;
-      font-size: .78rem;
-      padding: 5px 12px;
+      font-size: .76rem;
+      padding: 4px 12px;
       color: var(--acento);
       letter-spacing: .5px;
+      text-shadow: 0 1px 4px rgba(0,0,0,.95);
     }
 
+    /* ESTADO SYNC — más abajo, sin cruzarse */
     #estado-sync {
       position: absolute;
-      top: 86px; left: 50%; transform: translateX(-50%);
+      top: 108px; left: 50%; transform: translateX(-50%);
       z-index: 999;
-      background: rgba(26,26,46,0.85);
+      background: transparent;
       border-radius: 20px;
-      font-size: .72rem;
-      padding: 3px 14px;
-      color: #557;
+      font-size: .70rem;
+      padding: 2px 10px;
+      color: #888;
+      text-shadow: 0 1px 4px rgba(0,0,0,.95);
       transition: color .3s;
       white-space: nowrap;
     }
     #estado-sync.conectado { color: #4caf50; }
     #estado-sync.error     { color: var(--rojo); }
 
+    /* MAPA ocupa todo */
     #mapa {
       flex: 1;
       width: 100%;
@@ -105,13 +112,14 @@
       z-index: 1;
     }
 
+    /* PANEL INFERIOR — transparente */
     #panel {
       position: absolute;
       bottom: 0; left: 0; right: 0;
       z-index: 1000;
-      background: rgba(26,26,46,0.92);
-      border-top: 1.5px solid rgba(15,52,96,.7);
-      padding: 8px 12px;
+      background: transparent;
+      border-top: 1.5px solid rgba(15,52,96,.5);
+      padding: 8px 12px 14px;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
@@ -122,13 +130,16 @@
       flex: 1;
       min-width: 180px;
       font-size: .78rem;
-      color: #aac;
+      color: #fff;
       line-height: 1.4;
+      text-shadow: 0 1px 4px rgba(0,0,0,.95);
     }
     #info strong { color: var(--acento); font-size: .84rem; }
+    #info b      { color: #fff; }
 
+    /* Botones */
     #btn-enviar {
-      background: #25D366;
+      background: rgba(37,211,102,0.88);
       color: #fff;
       border: none;
       border-radius: 8px;
@@ -145,10 +156,10 @@
     }
     #btn-enviar:hover  { transform: translateY(-1px); }
     #btn-enviar:active { transform: translateY(0); }
-    #btn-enviar:disabled { background: #444; cursor: not-allowed; opacity: .6; }
+    #btn-enviar:disabled { background: rgba(80,80,80,0.7); cursor: not-allowed; opacity: .6; }
 
     #btn-limpiar {
-      background: transparent;
+      background: rgba(0,0,0,0.3);
       border: 1.5px solid var(--rojo);
       color: var(--rojo);
       border-radius: 8px;
@@ -159,10 +170,10 @@
       cursor: pointer;
       transition: background .12s;
     }
-    #btn-limpiar:hover { background: rgba(230,57,70,.15); }
+    #btn-limpiar:hover { background: rgba(230,57,70,.2); }
 
     #btn-recorrido {
-      background: transparent;
+      background: rgba(0,0,0,0.3);
       border: 1.5px solid var(--amarillo);
       color: var(--amarillo);
       border-radius: 8px;
@@ -192,12 +203,10 @@
       box-shadow: none !important;
     }
 
-    .leaflet-interactive { stroke: var(--rojo) !important; fill: rgba(230,57,70,.18) !important; }
+    /* Controles del mapa debajo de los headers */
+    .leaflet-top.leaflet-left { top: 130px !important; }
 
-    /* ── Empuja los controles del mapa debajo del header ── */
-    .leaflet-top.leaflet-left {
-      top: 110px !important;
-    }
+    .leaflet-interactive { stroke: var(--rojo) !important; fill: rgba(230,57,70,.18) !important; }
   </style>
 </head>
 <body>
@@ -233,7 +242,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
 <script>
-// ── Audio Web API — sonidos únicos por botón ────────────────────
+// ── Audio Web API ────────────────────────────────────────────────
 const ctx = new (window.AudioContext || window.webkitAudioContext)();
 
 function sonar(tipo) {
@@ -331,7 +340,6 @@ const WHATSAPP_NUMS = ['593963761330', '59399591992'];
 const ZOOM_INICIAL  = 17;
 const LAT_DEFAULT   = 0.23311819176648024;
 const LNG_DEFAULT   = -78.26155393719128;
-
 const MI_ID = 'usr_' + Math.random().toString(36).substr(2, 9);
 
 // ── Mapa ────────────────────────────────────────────────────────
@@ -390,18 +398,15 @@ function renderRecorrido(puntos) {
   capasDibujadas.addLayer(recorridoActual);
 }
 
-// ── Auto-posicionamiento para receptores ──────────────────────────
+// ── Auto-posicionamiento ──────────────────────────────────────────
 function volarAlIncidente(datos, autor) {
   if (autor === MI_ID) return;
-
   if (datos.circulo) {
     mapa.flyTo([datos.circulo.lat, datos.circulo.lng], 18, { animate: true, duration: 1.2 });
   } else if (datos.recorrido && datos.recorrido.length > 0) {
     mapa.flyTo([datos.recorrido[0].lat, datos.recorrido[0].lng], 18, { animate: true, duration: 1.2 });
   }
-
   sonar('alerta');
-
   estadoEl.textContent = '🚨 ¡NUEVO INCIDENTE! Mapa actualizado';
   estadoEl.className   = 'error';
   setTimeout(() => {
@@ -410,7 +415,7 @@ function volarAlIncidente(datos, autor) {
   }, 3000);
 }
 
-// ── Firebase: escuchar cambios ────────────────────────────────────
+// ── Firebase: escuchar ────────────────────────────────────────────
 refMapa.on('value', snapshot => {
   const datos = snapshot.val();
   estadoEl.className   = 'conectado';
@@ -426,9 +431,7 @@ refMapa.on('value', snapshot => {
   if (datos.circulo)                                 renderCirculo(datos.circulo);
   if (datos.recorrido && datos.recorrido.length > 1) renderRecorrido(datos.recorrido);
 
-  if (!cargaInicial) {
-    volarAlIncidente(datos, datos.autor || '');
-  }
+  if (!cargaInicial) volarAlIncidente(datos, datos.autor || '');
   cargaInicial = false;
 
   actualizarInfo();
@@ -438,7 +441,7 @@ refMapa.on('value', snapshot => {
   estadoEl.textContent = '🔴 Sin conexión';
 });
 
-// ── Firebase: publicar ──────────────────────────────────────────
+// ── Firebase: publicar ────────────────────────────────────────────
 function publicarEstado() {
   const payload = { autor: MI_ID };
   if (circuloActual) {
@@ -474,7 +477,7 @@ function toggleRecorrido() {
       '<strong>🚶 Recorrido activo</strong><br>Arrastra el dedo / mouse para trazar el camino sospechoso.';
   } else {
     btn.classList.remove('activo');
-    btn.textContent = '🚶 RECORRIDO SOSPECHOSO';
+    btn.textContent = '🥷 Sospechoso';
     mapa.dragging.enable();
     document.getElementById('mapa').style.cursor = '';
     if (puntosRecorrido.length > 1) publicarEstado();
