@@ -106,34 +106,39 @@
       z-index: 1;
     }
 
+    /* ── PANEL: info arriba, botones abajo en grid 2x2 ── */
     #panel {
       position: absolute;
       bottom: 0; left: 0; right: 0;
       z-index: 1000;
       background: transparent;
       border-top: none;
-      padding: 8px 12px 14px;
+      padding: 6px 10px 12px;
       display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 8px;
+      flex-direction: column;
+      gap: 6px;
     }
 
     #info {
-      flex: 1;
-      min-width: 180px;
-      font-size: .78rem;
+      font-size: .76rem;
       color: #fff;
       line-height: 1.4;
     }
-    #info strong { color: var(--acento); font-size: .84rem; }
+    #info strong { color: var(--acento); font-size: .80rem; }
     #info b      { color: #fff; }
 
-    /* Estilo base compartido por todos los botones */
+    /* Cuadrícula 2x2 siempre ordenada */
+    #botones {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    /* Estilo base compartido */
     #btn-enviar, #btn-limpiar, #btn-recorrido, #btn-actualizar {
       background: rgba(255,255,255,0.25);
       border-radius: 8px;
-      padding: 9px 14px;
+      padding: 10px 8px;
       font-family: 'Barlow', sans-serif;
       font-size: .82rem;
       font-weight: 600;
@@ -142,9 +147,11 @@
       white-space: nowrap;
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 6px;
       border-width: 1.5px;
       border-style: solid;
+      width: 100%;
     }
 
     /* WhatsApp — borde verde */
@@ -204,15 +211,17 @@
 
 <div id="panel">
   <div id="info">Dibuja un círculo o activa el recorrido para marcar la zona del incidente.</div>
-  <button id="btn-recorrido" onclick="sonar('recorrido'); toggleRecorrido()">🥷 Sospechoso</button>
-  <button id="btn-limpiar" onclick="sonar('limpiar'); limpiarTodo()">🗑️ Borrar</button>
-  <button id="btn-actualizar" onclick="sonar('mapa'); location.reload()">🔄 Actualizar</button>
-  <button id="btn-enviar" disabled onclick="sonar('enviar'); enviarWhatsApp()">
-    <svg width="16" height="16" viewBox="0 0 32 32" fill="currentColor">
-      <path d="M16 0C7.163 0 0 7.163 0 16c0 2.824.737 5.476 2.027 7.782L0 32l8.418-2.006A15.94 15.94 0 0016 32c8.837 0 16-7.163 16-16S24.837 0 16 0zm8.29 22.617c-.348.977-2.04 1.865-2.813 1.98-.719.107-1.623.152-2.617-.165-.602-.195-1.375-.455-2.363-.893-4.151-1.793-6.862-5.96-7.072-6.237-.206-.277-1.677-2.232-1.677-4.255 0-2.024 1.063-3.02 1.44-3.43.378-.41.823-.513 1.098-.513.274 0 .548.003.788.014.253.012.592-.097.927.707.348.83 1.183 2.855 1.287 3.063.104.208.174.452.035.73-.14.277-.21.45-.417.693-.208.243-.437.542-.623.727-.208.208-.424.433-.182.85.243.416 1.079 1.78 2.317 2.883 1.59 1.418 2.933 1.857 3.35 2.065.416.208.658.174.9-.104.243-.277 1.044-1.218 1.322-1.634.277-.416.554-.347.935-.208.38.138 2.413 1.138 2.828 1.345.416.208.693.312.796.487.104.174.104 1.009-.244 1.986z"/>
-    </svg>
-    WhatsApp
-  </button>
+  <div id="botones">
+    <button id="btn-recorrido" onclick="sonar('recorrido'); toggleRecorrido()">🥷 Sospechoso</button>
+    <button id="btn-limpiar"   onclick="sonar('limpiar'); limpiarTodo()">🗑️ Borrar</button>
+    <button id="btn-actualizar" onclick="sonar('mapa'); location.reload()">🔄 Actualizar</button>
+    <button id="btn-enviar" disabled onclick="sonar('enviar'); enviarWhatsApp()">
+      <svg width="16" height="16" viewBox="0 0 32 32" fill="currentColor">
+        <path d="M16 0C7.163 0 0 7.163 0 16c0 2.824.737 5.476 2.027 7.782L0 32l8.418-2.006A15.94 15.94 0 0016 32c8.837 0 16-7.163 16-16S24.837 0 16 0zm8.29 22.617c-.348.977-2.04 1.865-2.813 1.98-.719.107-1.623.152-2.617-.165-.602-.195-1.375-.455-2.363-.893-4.151-1.793-6.862-5.96-7.072-6.237-.206-.277-1.677-2.232-1.677-4.255 0-2.024 1.063-3.02 1.44-3.43.378-.41.823-.513 1.098-.513.274 0 .548.003.788.014.253.012.592-.097.927.707.348.83 1.183 2.855 1.287 3.063.104.208.174.452.035.73-.14.277-.21.45-.417.693-.208.243-.437.542-.623.727-.208.208-.424.433-.182.85.243.416 1.079 1.78 2.317 2.883 1.59 1.418 2.933 1.857 3.35 2.065.416.208.658.174.9-.104.243-.277 1.044-1.218 1.322-1.634.277-.416.554-.347.935-.208.38.138 2.413 1.138 2.828 1.345.416.208.693.312.796.487.104.174.104 1.009-.244 1.986z"/>
+      </svg>
+      WhatsApp
+    </button>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -324,7 +333,7 @@ const MI_ID = 'usr_' + Math.random().toString(36).substr(2, 9);
 // ── Mapa ────────────────────────────────────────────────────────
 const mapa = L.map('mapa', { attributionControl: false }).setView([LAT_DEFAULT, LNG_DEFAULT], ZOOM_INICIAL);
 L.control.attribution({ prefix: false, position: 'bottomright' }).addTo(mapa);
-mapa.attributionControl.setPrefix('Red Otavalo ®');
+mapa.attributionControl.setPrefix('RedOtavalo');
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '',
@@ -451,7 +460,7 @@ function toggleRecorrido() {
   const btn = document.getElementById('btn-recorrido');
   if (modoRecorrido) {
     btn.classList.add('activo');
-    btn.textContent = '⏹ DETENER RECORRIDO';
+    btn.textContent = '⏹ Detener';
     mapa.dragging.disable();
     document.getElementById('mapa').style.cursor = 'crosshair';
     document.getElementById('info').innerHTML =
