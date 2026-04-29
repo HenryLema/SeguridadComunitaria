@@ -59,8 +59,8 @@
       font-size: 20px; color: #fff;
     }
     @keyframes pulso {
-      0%,100% { box-shadow: 0 0 0 0 rgba(230,57,70,.7); }
-      50%      { box-shadow: 0 0 0 10px rgba(230,57,70,0); }
+      0%,100% { opacity: 1; }
+      50%      { opacity: .6; }
     }
 
     header h1 {
@@ -69,7 +69,6 @@
       letter-spacing: 3px;
       color: #fff;
       line-height: 1;
-      text-shadow: 0 1px 6px rgba(0,0,0,.9);
     }
     header h1 span { color: var(--rojo); }
 
@@ -83,7 +82,6 @@
       padding: 4px 12px;
       color: var(--acento);
       letter-spacing: .5px;
-      text-shadow: 0 1px 4px rgba(0,0,0,.95);
     }
 
     #estado-sync {
@@ -95,7 +93,6 @@
       font-size: .70rem;
       padding: 2px 10px;
       color: #888;
-      text-shadow: 0 1px 4px rgba(0,0,0,.95);
       transition: color .3s;
       white-space: nowrap;
     }
@@ -128,13 +125,12 @@
       font-size: .78rem;
       color: #fff;
       line-height: 1.4;
-      text-shadow: 0 1px 4px rgba(0,0,0,.95);
     }
     #info strong { color: var(--acento); font-size: .84rem; }
     #info b      { color: #fff; }
 
-    /* ── Estilo base compartido por los 3 botones ── */
-    #btn-enviar, #btn-limpiar, #btn-recorrido {
+    /* Estilo base compartido por todos los botones */
+    #btn-enviar, #btn-limpiar, #btn-recorrido, #btn-actualizar {
       background: rgba(255,255,255,0.25);
       border-radius: 8px;
       padding: 9px 14px;
@@ -152,47 +148,17 @@
     }
 
     /* WhatsApp — borde verde */
-    #btn-enviar {
-      border-color: var(--verde);
-      color: var(--verde);
-    }
+    #btn-enviar { border-color: var(--verde); color: var(--verde); }
     #btn-enviar:hover  { background: rgba(37,211,102,.15); }
     #btn-enviar:active { background: rgba(37,211,102,.25); }
-    #btn-enviar:disabled {
-      border-color: #555;
-      color: #555;
-      cursor: not-allowed;
-      opacity: .6;
-    }
-
-    /* Actualizar — borde azul */
-    #btn-actualizar {
-      background: rgba(255,255,255,0.25);
-      border: 1.5px solid #4fc3f7;
-      color: #4fc3f7;
-      border-radius: 8px;
-      padding: 9px 14px;
-      font-family: 'Barlow', sans-serif;
-      font-size: .82rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background .12s;
-      white-space: nowrap;
-    }
-    #btn-actualizar:hover { background: rgba(79,195,247,.15); }
+    #btn-enviar:disabled { border-color: #555; color: #555; cursor: not-allowed; opacity: .6; }
 
     /* Borrar — borde rojo */
-    #btn-limpiar {
-      border-color: var(--rojo);
-      color: var(--rojo);
-    }
+    #btn-limpiar { border-color: var(--rojo); color: var(--rojo); }
     #btn-limpiar:hover { background: rgba(230,57,70,.15); }
 
     /* Sospechoso — borde amarillo */
-    #btn-recorrido {
-      border-color: var(--amarillo);
-      color: var(--amarillo);
-    }
+    #btn-recorrido { border-color: var(--amarillo); color: var(--amarillo); }
     #btn-recorrido:hover { background: rgba(244,208,63,.15); }
     #btn-recorrido.activo {
       background: rgba(244,208,63,.2);
@@ -200,11 +166,17 @@
       color: #fff176;
       animation: parpadeo .8s ease-in-out infinite;
     }
+
+    /* Actualizar — borde azul */
+    #btn-actualizar { border-color: #4fc3f7; color: #4fc3f7; }
+    #btn-actualizar:hover { background: rgba(79,195,247,.15); }
+
     @keyframes parpadeo {
       0%,100% { opacity: 1; }
       50%      { opacity: .5; }
     }
 
+    /* Sin sombras en controles Leaflet */
     .leaflet-control-container .leaflet-bar,
     .leaflet-control-container .leaflet-bar a,
     .leaflet-touch .leaflet-bar {
@@ -212,7 +184,6 @@
     }
 
     .leaflet-top.leaflet-left { top: 130px !important; }
-
     .leaflet-interactive { stroke: var(--rojo) !important; fill: rgba(230,57,70,.18) !important; }
   </style>
 </head>
@@ -250,7 +221,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
 <script>
-// ── Audio Web API ────────────────────────────────────────────────
+// ── Audio ────────────────────────────────────────────────────────
 const ctx = new (window.AudioContext || window.webkitAudioContext)();
 
 function sonar(tipo) {
