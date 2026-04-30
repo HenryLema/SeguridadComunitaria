@@ -184,7 +184,17 @@
     .leaflet-control-container .leaflet-bar a,
     .leaflet-touch .leaflet-bar { box-shadow: none !important; }
     .leaflet-top.leaflet-left { top: 130px !important; }
-    .leaflet-interactive { stroke: var(--rojo) !important; fill: rgba(230,57,70,.18) !important; }
+
+    /* Circunferencia palpitante */
+    .leaflet-interactive {
+      stroke: var(--rojo) !important;
+      fill: rgba(230,57,70,.18) !important;
+      animation: circuloPalpita 1.2s ease-in-out infinite;
+    }
+    @keyframes circuloPalpita {
+      0%,100% { stroke-opacity: 1;   stroke-width: 3; }
+      50%      { stroke-opacity: 0.3; stroke-width: 6; }
+    }
   </style>
 </head>
 <body>
