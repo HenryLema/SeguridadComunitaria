@@ -160,8 +160,6 @@
       0%,100% { opacity: 1; }
       50%      { opacity: .5; }
     }
-
-    /* ── Marcadores inicio / fin de recorrido ── */
     .dot-inicio {
       width: 18px; height: 18px;
       background: #ff2200;
@@ -179,13 +177,10 @@
       0%,100% { transform: scale(1);    opacity: 1; }
       50%      { transform: scale(1.6); opacity: .4; }
     }
-
     .leaflet-control-container .leaflet-bar,
     .leaflet-control-container .leaflet-bar a,
     .leaflet-touch .leaflet-bar { box-shadow: none !important; }
     .leaflet-top.leaflet-left { top: 130px !important; }
-
-    /* Circunferencia palpitante */
     .leaflet-interactive {
       stroke: var(--rojo) !important;
       fill: rgba(230,57,70,.18) !important;
@@ -214,7 +209,7 @@
 <div id="panel">
   <div id="info">Dibuja un círculo o activa el recorrido para marcar la zona del incidente.</div>
   <div id="botones">
-    <button id="btn-recorrido" onclick="toggleRecorrido()">🥷 Sospechoso</button>
+    <button id="btn-recorrido" onclick="toggleRecorrido()">🥷 Recorrido</button>
     <button id="btn-limpiar"   onclick="sonar('limpiar'); limpiarTodo()">🗑️ Borrar</button>
     <button id="btn-actualizar" onclick="sonar('actualizar'); location.reload()">🔄 Actualizar</button>
     <button id="btn-enviar" disabled onclick="sonar('enviar'); enviarWhatsApp()">
@@ -232,86 +227,97 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
 <script>
-// ══════════════════════════════════════════════
-// AUDIO — sonido DIFERENTE por cada acción
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+// AUDIO — cada acción tiene su propio sonido único
+// ══════════════════════════════════════════════════════
 const actx = new (window.AudioContext || window.webkitAudioContext)();
 
 function sonar(tipo) {
   if (actx.state === 'suspended') actx.resume();
   const t = actx.currentTime;
 
-  const osc = (type, freq, start, dur, gainStart, gainEnd, freqEnd) => {
+  // Helper interno
+  const n = (type, freq, start, dur, vol, freqEnd) => {
     const o = actx.createOscillator(), g = actx.createGain();
     o.connect(g); g.connect(actx.destination);
     o.type = type;
     o.frequency.setValueAtTime(freq, start);
     if (freqEnd) o.frequency.exponentialRampToValueAtTime(freqEnd, start + dur);
-    g.gain.setValueAtTime(gainStart, start);
+    g.gain.setValueAtTime(vol, start);
     g.gain.exponentialRampToValueAtTime(0.001, start + dur);
     o.start(start); o.stop(start + dur + 0.01);
   };
 
-  switch(tipo) {
+  switch (tipo) {
 
-    case 'circulo':
-      // Ping doble ascendente — zona marcada
-      osc('sine',     880, t,        0.12, 0.22, 0.001, 1320);
-      osc('sine',    1320, t + 0.14, 0.10, 0.15, 0.001);
-      break;
-
-    case 'recorrido_inicio':
-      // Tres notas ascendentes rápidas — ¡arranca el rastreo!
-      [330, 495, 660].forEach((f, i) =>
-        osc('triangle', f, t + i * 0.08, 0.10, 0.22, 0.001));
-      break;
-
-    case 'recorrido_fin':
-      // Tres notas descendentes — rastreo terminado
-      [660, 495, 330].forEach((f, i) =>
-        osc('triangle', f, t + i * 0.09, 0.12, 0.22, 0.001));
-      break;
-
-    case 'limpiar':
-      // Glide descendente tipo "borrar"
-      osc('sawtooth', 700, t, 0.28, 0.15, 0.001, 100);
-      break;
-
-    case 'enviar':
-      // Acorde mayor alegre — mensaje enviado
-      [523, 659, 784, 1046].forEach((f, i) =>
-        osc('sine', f, t + i * 0.06, 0.30, 0.18, 0.001));
-      break;
-
-    case 'actualizar':
-      // Clic + subida — recargar
-      osc('square', 300, t,        0.05, 0.20, 0.001, 600);
-      osc('sine',   800, t + 0.07, 0.08, 0.15, 0.001);
-      break;
-
+    // ── Botón círculo del mapa Leaflet ──────────────────
     case 'mapa':
-      // Tac seco — botones del mapa Leaflet
-      osc('square', 220, t, 0.06, 0.18, 0.001, 60);
+      // Tac seco y corto
+      n('square', 220, t, 0.055, 0.18, 60);
       break;
 
+    // ── Círculo finalizado en el mapa ──────────────────
+    case 'circulo':
+      // Dos pulsos ascendentes tipo "zona marcada"
+      n('sine', 880,  t,       0.11, 0.22, 1320);
+      n('sine', 1320, t+0.14,  0.09, 0.14);
+      break;
+
+    // ── INICIO del rastreo — primer punto tocado ───────
+    case 'rastreo_inicio':
+      // Sirena corta ascendente — ¡empieza!
+      n('sine', 400, t,       0.06, 0.25, 800);
+      n('sine', 800, t+0.07,  0.06, 0.22, 1200);
+      n('sine',1200, t+0.14,  0.07, 0.20);
+      break;
+
+    // ── FIN del rastreo — dedo/mouse levantado ─────────
+    case 'rastreo_fin':
+      // Tres notas descendentes graves — "caso cerrado"
+      n('triangle', 740, t,       0.13, 0.22);
+      n('triangle', 520, t+0.14,  0.13, 0.22);
+      n('triangle', 310, t+0.28,  0.15, 0.22);
+      break;
+
+    // ── Borrar todo ────────────────────────────────────
+    case 'limpiar':
+      // Glide descendente rápido
+      n('sawtooth', 700, t, 0.26, 0.16, 90);
+      break;
+
+    // ── Enviar WhatsApp ────────────────────────────────
+    case 'enviar':
+      // Acorde mayor Do-Mi-Sol-Do8 ascendente
+      [523, 659, 784, 1046].forEach((f, i) =>
+        n('sine', f, t + i*0.07, 0.28, 0.18));
+      break;
+
+    // ── Botón Actualizar ───────────────────────────────
+    case 'actualizar':
+      // Clic grave + tono breve
+      n('square', 280, t,       0.05, 0.20, 560);
+      n('sine',   700, t+0.07,  0.07, 0.14);
+      break;
+
+    // ── Alerta en dispositivos receptores ─────────────
     case 'alerta':
-      // Sirena urgente — dispositivos receptores
+      // Sirena de 5 notas urgentes
       [440, 554, 659, 880, 1100].forEach((f, i) =>
-        osc('sine', f, t + i * 0.11, 0.18, 0.30, 0.001));
+        n('sine', f, t + i*0.11, 0.17, 0.30));
       break;
   }
 }
 
-// Sonido en botones del mapa (Leaflet toolbar)
+// Sonido al pulsar botones nativos del mapa
 document.addEventListener('click', e => {
   if (e.target.closest('.leaflet-draw-toolbar') ||
       e.target.closest('.leaflet-draw-actions') ||
       e.target.closest('.leaflet-control-zoom')) sonar('mapa');
 });
 
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 // FIREBASE
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 const firebaseConfig = {
   apiKey:            "AIzaSyA_KtZk_UtY1ub33hs1Ub_bUw7PBBOGViM",
   authDomain:        "seguridadcomunitaria-6e360.firebaseapp.com",
@@ -326,52 +332,49 @@ const db       = firebase.database();
 const refMapa  = db.ref('alertas/activa');
 const estadoEl = document.getElementById('estado-sync');
 
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 // CONFIGURACIÓN
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 const WHATSAPP_NUMS = ['593963761330', '59399591992'];
 const ZOOM_INICIAL  = 17;
 const LAT_DEFAULT   = 0.23311819176648024;
 const LNG_DEFAULT   = -78.26155393719128;
 const MI_ID = 'usr_' + Math.random().toString(36).substr(2, 9);
 
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 // ICONOS MARCADORES
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 const iconoInicio = L.divIcon({
   className: '',
   html: '<div class="dot-inicio"></div>',
-  iconSize: [18, 18], iconAnchor: [9, 9]
+  iconSize: [18,18], iconAnchor: [9,9]
 });
 const iconoFin = L.divIcon({
   className: '',
   html: '<div class="dot-fin"></div>',
-  iconSize: [18, 18], iconAnchor: [9, 9]
+  iconSize: [18,18], iconAnchor: [9,9]
 });
 
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 // MAPA
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 const mapa = L.map('mapa', { attributionControl: false })
               .setView([LAT_DEFAULT, LNG_DEFAULT], ZOOM_INICIAL);
 L.control.attribution({ prefix: false, position: 'bottomright' }).addTo(mapa);
 mapa.attributionControl.setPrefix('RedOtavalo');
-
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '', maxZoom: 19
 }).addTo(mapa);
 
-if (navigator.geolocation) {
+if (navigator.geolocation)
   navigator.geolocation.getCurrentPosition(pos =>
     mapa.setView([pos.coords.latitude, pos.coords.longitude], ZOOM_INICIAL));
-}
 
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 // CAPAS
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 const capasDibujadas = new L.FeatureGroup().addTo(mapa);
-
-const controlDibujo = new L.Control.Draw({
+const controlDibujo  = new L.Control.Draw({
   position: 'topleft',
   draw: {
     circle:       { shapeOptions: { color: '#e63946', fillOpacity: 0.18 } },
@@ -382,9 +385,9 @@ const controlDibujo = new L.Control.Draw({
 });
 mapa.addControl(controlDibujo);
 
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 // ESTADO LOCAL
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 let circuloActual   = null;
 let recorridoActual = null;
 let marcadorInicio  = null;
@@ -393,9 +396,9 @@ let modoRecorrido   = false;
 let puntosRecorrido = [];
 let cargaInicial    = true;
 
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 // HELPERS MARCADORES
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 function ponerInicio(latlng) {
   if (marcadorInicio) capasDibujadas.removeLayer(marcadorInicio);
   marcadorInicio = L.marker(latlng, { icon: iconoInicio, zIndexOffset: 900 });
@@ -411,9 +414,9 @@ function quitarMarcadores() {
   if (marcadorFin)    { capasDibujadas.removeLayer(marcadorFin);    marcadorFin    = null; }
 }
 
-// ══════════════════════════════════════════════
-// RENDER (desde Firebase)
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+// RENDER FIREBASE
+// ══════════════════════════════════════════════════════
 function renderCirculo(datos) {
   if (circuloActual) capasDibujadas.removeLayer(circuloActual);
   circuloActual = L.circle([datos.lat, datos.lng], {
@@ -421,7 +424,6 @@ function renderCirculo(datos) {
   });
   capasDibujadas.addLayer(circuloActual);
 }
-
 function renderRecorrido(puntos) {
   if (recorridoActual) capasDibujadas.removeLayer(recorridoActual);
   quitarMarcadores();
@@ -436,9 +438,9 @@ function renderRecorrido(puntos) {
   }
 }
 
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 // AUTO-POSICIONAMIENTO RECEPTORES
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 function volarAlIncidente(datos, autor) {
   if (autor === MI_ID) return;
   if (datos.circulo)
@@ -454,35 +456,32 @@ function volarAlIncidente(datos, autor) {
   }, 3000);
 }
 
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 // FIREBASE: ESCUCHAR
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 refMapa.on('value', snapshot => {
   const datos = snapshot.val();
   estadoEl.className   = 'conectado';
   estadoEl.textContent = '🟢 Sincronizado en Tiempo Real';
-
   if (!datos) {
     capasDibujadas.clearLayers();
     circuloActual = null; recorridoActual = null;
     marcadorInicio = null; marcadorFin = null; puntosRecorrido = [];
     cargaInicial = false; resetInfo(); return;
   }
-
   if (datos.circulo)                                 renderCirculo(datos.circulo);
   if (datos.recorrido && datos.recorrido.length > 1) renderRecorrido(datos.recorrido);
   if (!cargaInicial) volarAlIncidente(datos, datos.autor || '');
   cargaInicial = false;
   actualizarInfo();
-
 }, error => {
   estadoEl.className   = 'error';
   estadoEl.textContent = '🔴 Sin conexión';
 });
 
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 // FIREBASE: PUBLICAR
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 function publicarEstado() {
   const payload = { autor: MI_ID };
   if (circuloActual) {
@@ -494,9 +493,9 @@ function publicarEstado() {
   if (Object.keys(payload).length > 1) refMapa.set(payload);
 }
 
-// ══════════════════════════════════════════════
-// EVENTOS CÍRCULO
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+// EVENTOS CÍRCULO LEAFLET DRAW
+// ══════════════════════════════════════════════════════
 mapa.on(L.Draw.Event.CREATED, e => {
   sonar('circulo');
   if (circuloActual) capasDibujadas.removeLayer(circuloActual);
@@ -507,15 +506,16 @@ mapa.on(L.Draw.Event.CREATED, e => {
 mapa.on(L.Draw.Event.EDITED,  () => { publicarEstado(); actualizarInfo(); });
 mapa.on(L.Draw.Event.DELETED, () => { circuloActual = null; publicarEstado(); actualizarInfo(); });
 
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 // RECORRIDO SOSPECHOSO
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 function toggleRecorrido() {
   modoRecorrido = !modoRecorrido;
   const btn = document.getElementById('btn-recorrido');
 
   if (modoRecorrido) {
-    sonar('recorrido_inicio');                        // sonido INICIO
+    // ── INICIO ──────────────────────────────────────
+    sonar('rastreo_inicio');          // sirena corta ascendente
     btn.classList.add('activo');
     btn.textContent = '⏹ Detener';
     mapa.dragging.disable();
@@ -523,12 +523,12 @@ function toggleRecorrido() {
     document.getElementById('info').innerHTML =
       '<strong>🔴 Rastreo activo</strong><br>Arrastra el dedo / mouse para trazar el camino.';
   } else {
-    sonar('recorrido_fin');                           // sonido FIN
+    // ── FIN ─────────────────────────────────────────
+    sonar('rastreo_fin');             // tres notas descendentes graves
     btn.classList.remove('activo');
-    btn.textContent = '🥷 Sospechoso';
+    btn.textContent = '🥷 Recorrido';
     mapa.dragging.enable();
     document.getElementById('mapa').style.cursor = '';
-    // Colocar marcador final en último punto
     if (puntosRecorrido.length > 0)
       ponerFin(puntosRecorrido[puntosRecorrido.length - 1]);
     if (puntosRecorrido.length > 1) publicarEstado();
@@ -536,9 +536,11 @@ function toggleRecorrido() {
   }
 }
 
+// Mouse
 mapa.on('mousemove', e => { if (modoRecorrido) agregarPunto(e.latlng); });
 mapa.on('mouseup',   ()  => { if (modoRecorrido) toggleRecorrido(); });
 
+// Touch
 const mapaEl = document.getElementById('mapa');
 mapaEl.addEventListener('touchmove', e => {
   if (!modoRecorrido) return;
@@ -555,9 +557,7 @@ function agregarPunto(latlng) {
     const ult = puntosRecorrido[puntosRecorrido.length - 1];
     if (mapa.distance(ult, latlng) < 3) return;
   }
-  // Primer punto → marcador de INICIO rojo
-  if (puntosRecorrido.length === 0) ponerInicio(latlng);
-
+  if (puntosRecorrido.length === 0) ponerInicio(latlng); // marcador rojo inicio
   puntosRecorrido.push(latlng);
   if (recorridoActual) capasDibujadas.removeLayer(recorridoActual);
   recorridoActual = L.polyline(puntosRecorrido, {
@@ -567,9 +567,9 @@ function agregarPunto(latlng) {
   document.getElementById('btn-enviar').disabled = false;
 }
 
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 // INFO PANEL
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 function actualizarInfo() {
   const tieneC = circuloActual !== null;
   const tieneR = recorridoActual !== null && puntosRecorrido.length > 1;
@@ -577,7 +577,7 @@ function actualizarInfo() {
   let html = '';
   if (tieneC) {
     const c = circuloActual.getLatLng(), r = Math.round(circuloActual.getRadius());
-    html += `<strong>📍 Zona Marcada</strong><br>Centro: <b>${c.lat.toFixed(6)}, ${c.lng.toFixed(6)}</b><br>Radio aprox.: <b>${r} metros</b><br>`;
+    html += `<strong>📍 Zona Incidente</strong><br>Centro: <b>${c.lat.toFixed(6)}, ${c.lng.toFixed(6)}</b><br>Radio aprox.: <b>${r} metros</b><br>`;
   }
   if (tieneR) {
     const ini = puntosRecorrido[0], fin = puntosRecorrido[puntosRecorrido.length - 1];
@@ -589,15 +589,14 @@ function actualizarInfo() {
   document.getElementById('info').innerHTML = html;
   document.getElementById('btn-enviar').disabled = false;
 }
-
 function resetInfo() {
   document.getElementById('info').textContent = 'Dibuja un círculo o activa el recorrido para marcar la zona del incidente.';
   document.getElementById('btn-enviar').disabled = true;
 }
 
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 // LIMPIAR
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 function limpiarTodo() {
   capasDibujadas.clearLayers();
   circuloActual = null; recorridoActual = null;
@@ -607,9 +606,9 @@ function limpiarTodo() {
   resetInfo();
 }
 
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 // WHATSAPP
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 function enviarWhatsApp() {
   const tieneC = circuloActual !== null;
   const tieneR = recorridoActual !== null && puntosRecorrido.length > 1;
@@ -619,7 +618,7 @@ function enviarWhatsApp() {
     const c = circuloActual.getLatLng();
     const lat = c.lat.toFixed(6), lng = c.lng.toFixed(6);
     const r = Math.round(circuloActual.getRadius());
-    msg += `📍 *Zona del Incidente:*\nLatitud: ${lat}\nLongitud: ${lng}\nRadio Aprox.: ${r} metros\n🗺️ https://maps.google.com/?q=${lat},${lng}\n\n`;
+    msg += `📍 *Zona Incidente:*\nLatitud: ${lat}\nLongitud: ${lng}\nRadio Aprox.: ${r} metros\n🗺️ https://maps.google.com/?q=${lat},${lng}\n\n`;
   }
   if (tieneR) {
     const ini = puntosRecorrido[0], fin = puntosRecorrido[puntosRecorrido.length - 1];
