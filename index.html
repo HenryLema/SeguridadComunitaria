@@ -24,7 +24,7 @@
     body {
       font-family: 'Barlow', sans-serif;
       background: var(--oscuro);
-      color: #111;
+      color: var(--texto);
       height: 100dvh;
       display: flex;
       flex-direction: column;
@@ -74,7 +74,7 @@
       z-index: 999;
       background: transparent;
       text-align: center;
-      font-size: clamp(.68rem, 2.4vw, .76rem);
+      font-size: .76rem;
       padding: 4px 12px;
       color: var(--acento);
       letter-spacing: .5px;
@@ -85,7 +85,7 @@
       z-index: 999;
       background: transparent;
       border-radius: 20px;
-      font-size: clamp(.64rem, 2vw, .70rem);
+      font-size: .70rem;
       padding: 2px 10px;
       color: #888;
       transition: color .3s;
@@ -105,18 +105,18 @@
       z-index: 1000;
       background: transparent;
       border-top: none;
-      padding: 6px 10px env(safe-area-inset-bottom, 12px);
+      padding: 6px 10px 12px;
       display: flex;
       flex-direction: column;
       gap: 6px;
     }
     #info {
-      font-size: clamp(.72rem, 2.4vw, .76rem);
-      color: #111;
+      font-size: .76rem;
+      color: #fff;
       line-height: 1.4;
     }
-    #info strong { color: var(--acento); font-size: clamp(.74rem, 2.5vw, .80rem); }
-    #info b      { color: #111; }
+    #info strong { color: var(--acento); font-size: .80rem; }
+    #info b      { color: #fff; }
     #botones {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -125,9 +125,9 @@
     #btn-enviar, #btn-limpiar, #btn-recorrido, #btn-actualizar {
       background: rgba(255,255,255,0.25);
       border-radius: 8px;
-      padding: clamp(8px, 2.5vw, 10px) 8px;
+      padding: 10px 8px;
       font-family: 'Barlow', sans-serif;
-      font-size: clamp(.76rem, 2.6vw, .82rem);
+      font-size: .82rem;
       font-weight: 600;
       cursor: pointer;
       transition: background .12s;
@@ -139,24 +139,22 @@
       border-width: 1.5px;
       border-style: solid;
       width: 100%;
-      min-height: 44px;
-      touch-action: manipulation;
     }
-    #btn-enviar    { border-color: var(--verde);    color: #111; }
+    #btn-enviar    { border-color: var(--verde);    color: var(--verde); }
     #btn-enviar:hover  { background: rgba(37,211,102,.15); }
     #btn-enviar:active { background: rgba(37,211,102,.25); }
     #btn-enviar:disabled { border-color: #555; color: #555; cursor: not-allowed; opacity: .6; }
-    #btn-limpiar   { border-color: var(--rojo);     color: #111; }
+    #btn-limpiar   { border-color: var(--rojo);     color: var(--rojo); }
     #btn-limpiar:hover { background: rgba(230,57,70,.15); }
-    #btn-recorrido { border-color: var(--amarillo); color: #111; }
+    #btn-recorrido { border-color: var(--amarillo); color: var(--amarillo); }
     #btn-recorrido:hover { background: rgba(244,208,63,.15); }
     #btn-recorrido.activo {
       background: rgba(244,208,63,.2);
       border-color: #fff176;
-      color: #111;
+      color: #fff176;
       animation: parpadeo .8s ease-in-out infinite;
     }
-    #btn-actualizar { border-color: #4fc3f7; color: #111; }
+    #btn-actualizar { border-color: #4fc3f7; color: #4fc3f7; }
     #btn-actualizar:hover { background: rgba(79,195,247,.15); }
     @keyframes parpadeo {
       0%,100% { opacity: 1; }
@@ -191,21 +189,6 @@
     @keyframes circuloPalpita {
       0%,100% { stroke-opacity: 1;   stroke-width: 3; }
       50%      { stroke-opacity: 0.3; stroke-width: 6; }
-    }
-
-    /* ── Responsividad extra para pantallas muy pequeñas ── */
-    @media (max-width: 360px) {
-      .instruccion { font-size: .64rem; padding: 3px 8px; }
-      #btn-enviar, #btn-limpiar, #btn-recorrido, #btn-actualizar {
-        font-size: .72rem; padding: 8px 4px;
-      }
-    }
-    @media (max-height: 600px) {
-      #panel { padding-bottom: 4px; gap: 4px; }
-      #botones { gap: 4px; }
-      #btn-enviar, #btn-limpiar, #btn-recorrido, #btn-actualizar {
-        padding: 6px 8px; min-height: 38px;
-      }
     }
   </style>
 </head>
@@ -253,6 +236,7 @@ function sonar(tipo) {
   if (actx.state === 'suspended') actx.resume();
   const t = actx.currentTime;
 
+  // Helper interno
   const n = (type, freq, start, dur, vol, freqEnd) => {
     const o = actx.createOscillator(), g = actx.createGain();
     o.connect(g); g.connect(actx.destination);
@@ -265,41 +249,66 @@ function sonar(tipo) {
   };
 
   switch (tipo) {
+
+    // ── Botón círculo del mapa Leaflet ──────────────────
     case 'mapa':
+      // Tac seco y corto
       n('square', 220, t, 0.055, 0.18, 60);
       break;
+
+    // ── Círculo finalizado en el mapa ──────────────────
     case 'circulo':
+      // Dos pulsos ascendentes tipo "zona marcada"
       n('sine', 880,  t,       0.11, 0.22, 1320);
       n('sine', 1320, t+0.14,  0.09, 0.14);
       break;
+
+    // ── INICIO del rastreo — primer punto tocado ───────
     case 'rastreo_inicio':
+      // Sirena corta ascendente — ¡empieza!
       n('sine', 400, t,       0.06, 0.25, 800);
       n('sine', 800, t+0.07,  0.06, 0.22, 1200);
       n('sine',1200, t+0.14,  0.07, 0.20);
       break;
+
+    // ── FIN del rastreo — dedo/mouse levantado ─────────
     case 'rastreo_fin':
+      // Tres notas descendentes graves — "caso cerrado"
       n('triangle', 740, t,       0.13, 0.22);
       n('triangle', 520, t+0.14,  0.13, 0.22);
       n('triangle', 310, t+0.28,  0.15, 0.22);
       break;
+
+    // ── Borrar todo ────────────────────────────────────
     case 'limpiar':
+      // Glide descendente rápido
       n('sawtooth', 700, t, 0.26, 0.16, 90);
       break;
+
+    // ── Enviar WhatsApp ────────────────────────────────
     case 'enviar':
+      // Acorde mayor Do-Mi-Sol-Do8 ascendente
       [523, 659, 784, 1046].forEach((f, i) =>
         n('sine', f, t + i*0.07, 0.28, 0.18));
       break;
+
+    // ── Botón Actualizar ───────────────────────────────
     case 'actualizar':
+      // Clic grave + tono breve
       n('square', 280, t,       0.05, 0.20, 560);
       n('sine',   700, t+0.07,  0.07, 0.14);
       break;
+
+    // ── Alerta en dispositivos receptores ─────────────
     case 'alerta':
+      // Sirena de 5 notas urgentes
       [440, 554, 659, 880, 1100].forEach((f, i) =>
         n('sine', f, t + i*0.11, 0.17, 0.30));
       break;
   }
 }
 
+// Sonido al pulsar botones nativos del mapa
 document.addEventListener('click', e => {
   if (e.target.closest('.leaflet-draw-toolbar') ||
       e.target.closest('.leaflet-draw-actions') ||
@@ -505,7 +514,8 @@ function toggleRecorrido() {
   const btn = document.getElementById('btn-recorrido');
 
   if (modoRecorrido) {
-    sonar('rastreo_inicio');
+    // ── INICIO ──────────────────────────────────────
+    sonar('rastreo_inicio');          // sirena corta ascendente
     btn.classList.add('activo');
     btn.textContent = '⏹ Detener';
     mapa.dragging.disable();
@@ -513,7 +523,8 @@ function toggleRecorrido() {
     document.getElementById('info').innerHTML =
       '<strong>🔴 Rastreo activo</strong><br>Arrastra el dedo / mouse para trazar el camino.';
   } else {
-    sonar('rastreo_fin');
+    // ── FIN ─────────────────────────────────────────
+    sonar('rastreo_fin');             // tres notas descendentes graves
     btn.classList.remove('activo');
     btn.textContent = '🥷 Recorrido';
     mapa.dragging.enable();
@@ -546,7 +557,7 @@ function agregarPunto(latlng) {
     const ult = puntosRecorrido[puntosRecorrido.length - 1];
     if (mapa.distance(ult, latlng) < 3) return;
   }
-  if (puntosRecorrido.length === 0) ponerInicio(latlng);
+  if (puntosRecorrido.length === 0) ponerInicio(latlng); // marcador rojo inicio
   puntosRecorrido.push(latlng);
   if (recorridoActual) capasDibujadas.removeLayer(recorridoActual);
   recorridoActual = L.polyline(puntosRecorrido, {
