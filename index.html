@@ -119,10 +119,10 @@
     #info b      { color: #fff; }
     #botones {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 6px;
     }
-    #btn-enviar, #btn-limpiar, #btn-recorrido, #btn-actualizar {
+    #btn-enviar, #btn-limpiar, #btn-recorrido, #btn-actualizar, #btn-local {
       background: rgba(255,255,255,0.25);
       border-radius: 8px;
       padding: 10px 8px;
@@ -140,6 +140,11 @@
       border-style: solid;
       width: 100%;
     }
+    /* Fila 1: 3 botones */
+    .fila1 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+    /* Fila 2: 2 botones centrados */
+    .fila2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+
     #btn-enviar    { border-color: var(--verde);    color: var(--verde); }
     #btn-enviar:hover  { background: rgba(37,211,102,.15); }
     #btn-enviar:active { background: rgba(37,211,102,.25); }
@@ -154,8 +159,21 @@
       color: #fff176;
       animation: parpadeo .8s ease-in-out infinite;
     }
+    #btn-recorrido.esperando-click {
+      background: rgba(244,208,63,.08);
+      border-color: var(--amarillo);
+      color: var(--amarillo);
+      animation: parpadeo 1.4s ease-in-out infinite;
+    }
     #btn-actualizar { border-color: #4fc3f7; color: #4fc3f7; }
     #btn-actualizar:hover { background: rgba(79,195,247,.15); }
+    #btn-local { border-color: #a78bfa; color: #a78bfa; }
+    #btn-local:hover { background: rgba(167,139,250,.15); }
+    #btn-local.buscando {
+      border-color: #a78bfa;
+      color: #a78bfa;
+      animation: parpadeo .9s ease-in-out infinite;
+    }
     @keyframes parpadeo {
       0%,100% { opacity: 1; }
       50%      { opacity: .5; }
@@ -190,6 +208,9 @@
       0%,100% { stroke-opacity: 1;   stroke-width: 3; }
       50%      { stroke-opacity: 0.3; stroke-width: 6; }
     }
+
+    /* Cursor especial mientras espera click para iniciar rastreo */
+    #mapa.esperando-rastreo { cursor: crosshair !important; }
   </style>
 </head>
 <body>
@@ -209,15 +230,22 @@
 <div id="panel">
   <div id="info">Dibuja un círculo o activa el recorrido para marcar la zona del incidente.</div>
   <div id="botones">
-    <button id="btn-recorrido" onclick="toggleRecorrido()">🥷 Recorrido</button>
-    <button id="btn-limpiar"   onclick="sonar('limpiar'); limpiarTodo()">🗑️ Borrar</button>
-    <button id="btn-actualizar" onclick="sonar('actualizar'); location.reload()">🔄 Actualizar</button>
-    <button id="btn-enviar" disabled onclick="sonar('enviar'); enviarWhatsApp()">
-      <svg width="16" height="16" viewBox="0 0 32 32" fill="currentColor">
-        <path d="M16 0C7.163 0 0 7.163 0 16c0 2.824.737 5.476 2.027 7.782L0 32l8.418-2.006A15.94 15.94 0 0016 32c8.837 0 16-7.163 16-16S24.837 0 16 0zm8.29 22.617c-.348.977-2.04 1.865-2.813 1.98-.719.107-1.623.152-2.617-.165-.602-.195-1.375-.455-2.363-.893-4.151-1.793-6.862-5.96-7.072-6.237-.206-.277-1.677-2.232-1.677-4.255 0-2.024 1.063-3.02 1.44-3.43.378-.41.823-.513 1.098-.513.274 0 .548.003.788.014.253.012.592-.097.927.707.348.83 1.183 2.855 1.287 3.063.104.208.174.452.035.73-.14.277-.21.45-.417.693-.208.243-.437.542-.623.727-.208.208-.424.433-.182.85.243.416 1.079 1.78 2.317 2.883 1.59 1.418 2.933 1.857 3.35 2.065.416.208.658.174.9-.104.243-.277 1.044-1.218 1.322-1.634.277-.416.554-.347.935-.208.38.138 2.413 1.138 2.828 1.345.416.208.693.312.796.487.104.174.104 1.009-.244 1.986z"/>
-      </svg>
-      WhatsApp
-    </button>
+    <!-- Fila 1: Recorrido · Borrar · Actualizar -->
+    <div class="fila1">
+      <button id="btn-recorrido" onclick="toggleRecorrido()">🥷 Recorrido</button>
+      <button id="btn-limpiar"   onclick="sonar('limpiar'); limpiarTodo()">🗑️ Borrar</button>
+      <button id="btn-actualizar" onclick="sonar('actualizar'); location.reload()">🔄 Actualizar</button>
+    </div>
+    <!-- Fila 2: Local · WhatsApp -->
+    <div class="fila2">
+      <button id="btn-local" onclick="irAMiUbicacion()">📍 Local</button>
+      <button id="btn-enviar" disabled onclick="sonar('enviar'); enviarWhatsApp()">
+        <svg width="16" height="16" viewBox="0 0 32 32" fill="currentColor">
+          <path d="M16 0C7.163 0 0 7.163 0 16c0 2.824.737 5.476 2.027 7.782L0 32l8.418-2.006A15.94 15.94 0 0016 32c8.837 0 16-7.163 16-16S24.837 0 16 0zm8.29 22.617c-.348.977-2.04 1.865-2.813 1.98-.719.107-1.623.152-2.617-.165-.602-.195-1.375-.455-2.363-.893-4.151-1.793-6.862-5.96-7.072-6.237-.206-.277-1.677-2.232-1.677-4.255 0-2.024 1.063-3.02 1.44-3.43.378-.41.823-.513 1.098-.513.274 0 .548.003.788.014.253.012.592-.097.927.707.348.83 1.183 2.855 1.287 3.063.104.208.174.452.035.73-.14.277-.21.45-.417.693-.208.243-.437.542-.623.727-.208.208-.424.433-.182.85.243.416 1.079 1.78 2.317 2.883 1.59 1.418 2.933 1.857 3.35 2.065.416.208.658.174.9-.104.243-.277 1.044-1.218 1.322-1.634.277-.416.554-.347.935-.208.38.138 2.413 1.138 2.828 1.345.416.208.693.312.796.487.104.174.104 1.009-.244 1.986z"/>
+        </svg>
+        WhatsApp
+      </button>
+    </div>
   </div>
 </div>
 
@@ -236,7 +264,6 @@ function sonar(tipo) {
   if (actx.state === 'suspended') actx.resume();
   const t = actx.currentTime;
 
-  // Helper interno
   const n = (type, freq, start, dur, vol, freqEnd) => {
     const o = actx.createOscillator(), g = actx.createGain();
     o.connect(g); g.connect(actx.destination);
@@ -249,66 +276,45 @@ function sonar(tipo) {
   };
 
   switch (tipo) {
-
-    // ── Botón círculo del mapa Leaflet ──────────────────
     case 'mapa':
-      // Tac seco y corto
       n('square', 220, t, 0.055, 0.18, 60);
       break;
-
-    // ── Círculo finalizado en el mapa ──────────────────
     case 'circulo':
-      // Dos pulsos ascendentes tipo "zona marcada"
       n('sine', 880,  t,       0.11, 0.22, 1320);
       n('sine', 1320, t+0.14,  0.09, 0.14);
       break;
-
-    // ── INICIO del rastreo — primer punto tocado ───────
     case 'rastreo_inicio':
-      // Sirena corta ascendente — ¡empieza!
       n('sine', 400, t,       0.06, 0.25, 800);
       n('sine', 800, t+0.07,  0.06, 0.22, 1200);
       n('sine',1200, t+0.14,  0.07, 0.20);
       break;
-
-    // ── FIN del rastreo — dedo/mouse levantado ─────────
     case 'rastreo_fin':
-      // Tres notas descendentes graves — "caso cerrado"
       n('triangle', 740, t,       0.13, 0.22);
       n('triangle', 520, t+0.14,  0.13, 0.22);
       n('triangle', 310, t+0.28,  0.15, 0.22);
       break;
-
-    // ── Borrar todo ────────────────────────────────────
     case 'limpiar':
-      // Glide descendente rápido
       n('sawtooth', 700, t, 0.26, 0.16, 90);
       break;
-
-    // ── Enviar WhatsApp ────────────────────────────────
     case 'enviar':
-      // Acorde mayor Do-Mi-Sol-Do8 ascendente
       [523, 659, 784, 1046].forEach((f, i) =>
         n('sine', f, t + i*0.07, 0.28, 0.18));
       break;
-
-    // ── Botón Actualizar ───────────────────────────────
     case 'actualizar':
-      // Clic grave + tono breve
       n('square', 280, t,       0.05, 0.20, 560);
       n('sine',   700, t+0.07,  0.07, 0.14);
       break;
-
-    // ── Alerta en dispositivos receptores ─────────────
     case 'alerta':
-      // Sirena de 5 notas urgentes
       [440, 554, 659, 880, 1100].forEach((f, i) =>
         n('sine', f, t + i*0.11, 0.17, 0.30));
+      break;
+    case 'local':
+      n('sine', 600, t,       0.07, 0.20, 900);
+      n('sine', 900, t+0.08,  0.08, 0.18, 1200);
       break;
   }
 }
 
-// Sonido al pulsar botones nativos del mapa
 document.addEventListener('click', e => {
   if (e.target.closest('.leaflet-draw-toolbar') ||
       e.target.closest('.leaflet-draw-actions') ||
@@ -393,8 +399,11 @@ let recorridoActual = null;
 let marcadorInicio  = null;
 let marcadorFin     = null;
 let modoRecorrido   = false;
+let esperandoClickInicio = false; // NUEVO: espera click en mapa para empezar a trazar
+let dibujandoRecorrido   = false; // NUEVO: está dibujando activamente
 let puntosRecorrido = [];
 let cargaInicial    = true;
+let marcadorLocal   = null;       // NUEVO: marcador de ubicación propia
 
 // ══════════════════════════════════════════════════════
 // HELPERS MARCADORES
@@ -510,54 +519,91 @@ mapa.on(L.Draw.Event.DELETED, () => { circuloActual = null; publicarEstado(); ac
 // RECORRIDO SOSPECHOSO
 // ══════════════════════════════════════════════════════
 function toggleRecorrido() {
-  modoRecorrido = !modoRecorrido;
   const btn = document.getElementById('btn-recorrido');
 
+  // Si estaba esperando click o dibujando → CANCELAR / TERMINAR
   if (modoRecorrido) {
-    // ── INICIO ──────────────────────────────────────
-    sonar('rastreo_inicio');          // sirena corta ascendente
-    btn.classList.add('activo');
-    btn.textContent = '⏹ Detener';
-    mapa.dragging.disable();
-    document.getElementById('mapa').style.cursor = 'crosshair';
-    document.getElementById('info').innerHTML =
-      '<strong>🔴 Rastreo activo</strong><br>Arrastra el dedo / mouse para trazar el camino.';
-  } else {
-    // ── FIN ─────────────────────────────────────────
-    sonar('rastreo_fin');             // tres notas descendentes graves
-    btn.classList.remove('activo');
+    sonar('rastreo_fin');
+    modoRecorrido          = false;
+    esperandoClickInicio   = false;
+    dibujandoRecorrido     = false;
+    btn.classList.remove('activo', 'esperando-click');
     btn.textContent = '🥷 Recorrido';
     mapa.dragging.enable();
+    document.getElementById('mapa').classList.remove('esperando-rastreo');
     document.getElementById('mapa').style.cursor = '';
     if (puntosRecorrido.length > 0)
       ponerFin(puntosRecorrido[puntosRecorrido.length - 1]);
     if (puntosRecorrido.length > 1) publicarEstado();
     actualizarInfo();
+    return;
   }
+
+  // ACTIVAR: entra en modo "esperando click en mapa para empezar"
+  sonar('rastreo_inicio');
+  modoRecorrido        = true;
+  esperandoClickInicio = true;
+  dibujandoRecorrido   = false;
+  btn.classList.add('esperando-click');
+  btn.textContent = '⏹ Detener';
+  document.getElementById('mapa').classList.add('esperando-rastreo');
+  document.getElementById('info').innerHTML =
+    '<strong>🟡 Haz click en el mapa</strong> para comenzar a trazar el recorrido.';
 }
 
-// Mouse
-mapa.on('mousemove', e => { if (modoRecorrido) agregarPunto(e.latlng); });
-mapa.on('mouseup',   ()  => { if (modoRecorrido) toggleRecorrido(); });
+// ── Click en el mapa (desktop): inicia el dibujo al primer click ────────
+mapa.on('click', e => {
+  if (!modoRecorrido || !esperandoClickInicio) return;
+  // Primer click: arrancar el dibujo
+  esperandoClickInicio = false;
+  dibujandoRecorrido   = true;
+  mapa.dragging.disable();
+  document.getElementById('mapa').classList.remove('esperando-rastreo');
+  document.getElementById('mapa').style.cursor = 'crosshair';
+  document.getElementById('info').innerHTML =
+    '<strong>🔴 Rastreo activo</strong><br>Arrastra el mouse para trazar el camino.';
+  agregarPunto(e.latlng);
+});
 
-// Touch
+// ── Mousemove (desktop): solo dibuja si ya arrancó con el click ─────────
+mapa.on('mousemove', e => {
+  if (modoRecorrido && dibujandoRecorrido) agregarPunto(e.latlng);
+});
+
+// ── Mouseup (desktop): suelta el botón → termina el recorrido ───────────
+mapa.on('mouseup', () => {
+  if (modoRecorrido && dibujandoRecorrido) toggleRecorrido();
+});
+
+// ── Touch (móvil): igual que antes, sin cambios ─────────────────────────
 const mapaEl = document.getElementById('mapa');
 mapaEl.addEventListener('touchmove', e => {
   if (!modoRecorrido) return;
   e.preventDefault();
+  // En móvil, el primer touchmove activa el dibujo directamente
+  if (esperandoClickInicio) {
+    esperandoClickInicio = false;
+    dibujandoRecorrido   = true;
+    mapa.dragging.disable();
+    document.getElementById('mapa').classList.remove('esperando-rastreo');
+    document.getElementById('mapa').style.cursor = 'crosshair';
+  }
   const touch = e.touches[0];
   const rect  = mapaEl.getBoundingClientRect();
   agregarPunto(mapa.containerPointToLatLng(
     L.point(touch.clientX - rect.left, touch.clientY - rect.top)));
 }, { passive: false });
-mapaEl.addEventListener('touchend', () => { if (modoRecorrido) toggleRecorrido(); });
+
+mapaEl.addEventListener('touchend', () => {
+  if (modoRecorrido && dibujandoRecorrido) toggleRecorrido();
+});
 
 function agregarPunto(latlng) {
   if (puntosRecorrido.length > 0) {
     const ult = puntosRecorrido[puntosRecorrido.length - 1];
     if (mapa.distance(ult, latlng) < 3) return;
   }
-  if (puntosRecorrido.length === 0) ponerInicio(latlng); // marcador rojo inicio
+  if (puntosRecorrido.length === 0) ponerInicio(latlng);
   puntosRecorrido.push(latlng);
   if (recorridoActual) capasDibujadas.removeLayer(recorridoActual);
   recorridoActual = L.polyline(puntosRecorrido, {
@@ -565,6 +611,64 @@ function agregarPunto(latlng) {
   });
   capasDibujadas.addLayer(recorridoActual);
   document.getElementById('btn-enviar').disabled = false;
+}
+
+// ══════════════════════════════════════════════════════
+// BOTÓN LOCAL — ir a mi ubicación GPS
+// ══════════════════════════════════════════════════════
+function irAMiUbicacion() {
+  sonar('local');
+  const btn = document.getElementById('btn-local');
+  if (!navigator.geolocation) {
+    document.getElementById('info').innerHTML =
+      '<strong style="color:var(--rojo)">⚠️ GPS no disponible</strong> en este dispositivo.';
+    return;
+  }
+  btn.classList.add('buscando');
+  btn.textContent = '⏳ GPS...';
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const acc = Math.round(pos.coords.accuracy);
+      mapa.flyTo([lat, lng], 18, { animate: true, duration: 1.2 });
+
+      // Marcador de mi posición (distinto a los de incidente)
+      const iconoYo = L.divIcon({
+        className: '',
+        html: `<div style="
+          width:22px;height:22px;
+          background:#a78bfa;
+          border:3px solid #fff;
+          border-radius:50%;
+          box-shadow:0 0 0 4px rgba(167,139,250,.35);
+        "></div>`,
+        iconSize: [22,22], iconAnchor: [11,11]
+      });
+      if (marcadorLocal) mapa.removeLayer(marcadorLocal);
+      marcadorLocal = L.marker([lat, lng], { icon: iconoYo, zIndexOffset: 2000 }).addTo(mapa);
+      marcadorLocal.bindPopup(
+        `<b>📍 Mi ubicación</b><br>${lat.toFixed(6)}, ${lng.toFixed(6)}<br>Precisión: ±${acc} m`
+      ).openPopup();
+
+      btn.classList.remove('buscando');
+      btn.textContent = '📍 Local';
+      document.getElementById('info').innerHTML =
+        `<strong>📍 Mi ubicación</strong><br>Lat: <b>${lat.toFixed(6)}</b> · Lng: <b>${lng.toFixed(6)}</b><br>Precisión: ±${acc} m`;
+      sonar('circulo');
+    },
+    err => {
+      btn.classList.remove('buscando');
+      btn.textContent = '📍 Local';
+      const msg = err.code === 1
+        ? 'Permiso de ubicación denegado.'
+        : err.code === 2 ? 'GPS no disponible ahora.'
+        : 'Tiempo de espera agotado.';
+      document.getElementById('info').innerHTML =
+        `<strong style="color:var(--rojo)">⚠️ ${msg}</strong>`;
+    },
+    { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+  );
 }
 
 // ══════════════════════════════════════════════════════
@@ -601,6 +705,7 @@ function limpiarTodo() {
   capasDibujadas.clearLayers();
   circuloActual = null; recorridoActual = null;
   marcadorInicio = null; marcadorFin = null; puntosRecorrido = [];
+  if (marcadorLocal) { mapa.removeLayer(marcadorLocal); marcadorLocal = null; }
   if (modoRecorrido) toggleRecorrido();
   refMapa.remove();
   resetInfo();
