@@ -2,250 +2,114 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Reporte de Alboroto</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no"/>
+  <title>Alerta Roja — Seguridad Comunitaria</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
-
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;600&display=swap');
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     :root {
-      --rojo:     #e63946;
-      --oscuro:   #1a1a2e;
-      --panel:    #16213e;
-      --borde:    #0f3460;
-      --texto:    #eaeaea;
-      --acento:   #f4a261;
-      --amarillo: #f4d03f;
-      --verde:    #25D366;
+      --rojo:    #e63946;
+      --oscuro:  #1a1a2e;
+      --texto:   #eaeaea;
+      --acento:  #f4a261;
+      --amarillo:#f4d03f;
+      --verde:   #25D366;
+      --morado:  #a78bfa;
+      --azul:    #4fc3f7;
     }
-    body {
-      font-family: 'Barlow', sans-serif;
-      background: var(--oscuro);
-      color: var(--texto);
-      height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    header {
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      z-index: 1000;
-      background: transparent;
-      border-bottom: none;
-      padding: 8px 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .pulse-icon {
-      width: 30px; height: 30px;
-      background: var(--rojo);
-      border-radius: 50%;
-      position: relative;
-      flex-shrink: 0;
-      animation: pulso 1.6s ease-in-out infinite;
-    }
-    .pulse-icon::after {
-      content: '!';
-      position: absolute; inset: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 20px; color: #fff;
-    }
-    @keyframes pulso {
-      0%,100% { opacity: 1; }
-      50%      { opacity: .6; }
-    }
-    header h1 {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(1.2rem, 4vw, 1.7rem);
-      letter-spacing: 3px;
-      color: #fff;
-      line-height: 1;
-    }
-    header h1 span { color: var(--rojo); }
-    .instruccion {
-      position: absolute;
-      top: 50px; left: 0; right: 0;
-      z-index: 999;
-      background: transparent;
-      text-align: center;
-      font-size: .76rem;
-      padding: 4px 12px;
-      color: var(--acento);
-      letter-spacing: .5px;
-    }
-    #estado-sync {
-      position: absolute;
-      top: 108px; left: 50%; transform: translateX(-50%);
-      z-index: 999;
-      background: transparent;
-      border-radius: 20px;
-      font-size: .70rem;
-      padding: 2px 10px;
-      color: #888;
-      transition: color .3s;
-      white-space: nowrap;
-    }
-    #estado-sync.conectado { color: #4caf50; }
-    #estado-sync.error     { color: var(--rojo); }
-    #mapa {
-      flex: 1;
-      width: 100%;
-      position: relative;
-      z-index: 1;
-    }
-    #panel {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      z-index: 1000;
-      background: transparent;
-      border-top: none;
-      padding: 6px 10px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    #info {
-      font-size: .76rem;
-      color: #fff;
-      line-height: 1.4;
-    }
-    #info strong { color: var(--acento); font-size: .80rem; }
-    #info b      { color: #fff; }
-    #botones {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 6px;
-    }
-    #btn-enviar, #btn-limpiar, #btn-recorrido, #btn-actualizar, #btn-local {
-      background: rgba(255,255,255,0.25);
-      border-radius: 8px;
-      padding: 10px 8px;
-      font-family: 'Barlow', sans-serif;
-      font-size: .82rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background .12s;
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      border-width: 1.5px;
-      border-style: solid;
-      width: 100%;
-    }
-    /* Fila 1: 3 botones */
-    .fila1 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
-    /* Fila 2: 2 botones centrados */
-    .fila2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-
-    #btn-enviar    { border-color: var(--verde);    color: var(--verde); }
-    #btn-enviar:hover  { background: rgba(37,211,102,.15); }
-    #btn-enviar:active { background: rgba(37,211,102,.25); }
-    #btn-enviar:disabled { border-color: #555; color: #555; cursor: not-allowed; opacity: .6; }
-    #btn-limpiar   { border-color: var(--rojo);     color: var(--rojo); }
-    #btn-limpiar:hover { background: rgba(230,57,70,.15); }
-    #btn-recorrido { border-color: var(--amarillo); color: var(--amarillo); }
-    #btn-recorrido:hover { background: rgba(244,208,63,.15); }
-    #btn-recorrido.activo {
-      background: rgba(244,208,63,.2);
-      border-color: #fff176;
-      color: #fff176;
-      animation: parpadeo .8s ease-in-out infinite;
-    }
-    #btn-recorrido.esperando-click {
-      background: rgba(244,208,63,.08);
-      border-color: var(--amarillo);
-      color: var(--amarillo);
-      animation: parpadeo 1.4s ease-in-out infinite;
-    }
-    #btn-actualizar { border-color: #4fc3f7; color: #4fc3f7; }
-    #btn-actualizar:hover { background: rgba(79,195,247,.15); }
-    #btn-local { border-color: #a78bfa; color: #a78bfa; }
-    #btn-local:hover { background: rgba(167,139,250,.15); }
-    #btn-local.buscando {
-      border-color: #a78bfa;
-      color: #a78bfa;
-      animation: parpadeo .9s ease-in-out infinite;
-    }
-    @keyframes parpadeo {
-      0%,100% { opacity: 1; }
-      50%      { opacity: .5; }
-    }
-    .dot-inicio {
-      width: 18px; height: 18px;
-      background: #ff2200;
-      border: 3px solid #fff;
-      border-radius: 50%;
-    }
-    .dot-fin {
-      width: 18px; height: 18px;
-      background: #8b0000;
-      border: 3px solid #fff;
-      border-radius: 50%;
-      animation: palpitar 0.8s ease-in-out infinite;
-    }
-    @keyframes palpitar {
-      0%,100% { transform: scale(1);    opacity: 1; }
-      50%      { transform: scale(1.6); opacity: .4; }
-    }
+    html, body { height:100%; width:100%; overflow:hidden; background:var(--oscuro); color:var(--texto); font-family:'Barlow',Arial,sans-serif; font-size:13px; }
+    #mapa { position:fixed; inset:0; z-index:0; }
+    #mapa.esperando-rastreo { cursor:crosshair !important; }
+    /* TOP */
+    #top { position:fixed; top:0; left:0; right:0; z-index:1000; padding:clamp(5px,1.5vw,9px) clamp(7px,2vw,13px); background:transparent; pointer-events:none; }
+    #top > * { pointer-events:auto; }
+    #topRow { display:flex; flex-wrap:wrap; align-items:center; gap:clamp(4px,1.2vw,7px); }
+    /* PULSE */
+    .pulse-icon { width:clamp(26px,5vw,32px); height:clamp(26px,5vw,32px); background:var(--rojo); border-radius:50%; flex-shrink:0; animation:pulso 1.6s ease-in-out infinite; display:flex; align-items:center; justify-content:center; }
+    .pulse-icon::after { content:'!'; font-family:'Bebas Neue',sans-serif; font-size:clamp(16px,3vw,20px); color:#fff; line-height:1; }
+    @keyframes pulso { 0%,100%{opacity:1} 50%{opacity:.55} }
+    /* CHIPS */
+    .chip { display:inline-flex; align-items:center; height:clamp(28px,5.5vw,36px); padding:0 clamp(7px,2vw,13px); border:1.5px solid rgba(255,255,255,.22); border-radius:10px; font-family:'Barlow',Arial,sans-serif; font-size:clamp(10px,1.9vw,13px); font-weight:600; background:rgba(20,20,40,.72); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); white-space:nowrap; line-height:1; cursor:default; user-select:none; color:var(--texto); letter-spacing:.3px; }
+    .chip-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(13px,3vw,18px); letter-spacing:2.5px; border-color:rgba(230,57,70,.55); background:rgba(230,57,70,.18); color:#fff; height:auto; padding:clamp(4px,1vw,6px) clamp(8px,2vw,13px); }
+    .chip-title span { color:var(--rojo); }
+    .chip-hint { font-size:clamp(9px,1.7vw,11px); font-weight:400; color:var(--acento); border-color:rgba(244,162,97,.3); background:rgba(244,162,97,.08); letter-spacing:.4px; }
+    #chip-sync { font-size:clamp(9px,1.7vw,11px); font-weight:400; color:#888; border-color:rgba(255,255,255,.12); transition:color .3s,border-color .3s; }
+    #chip-sync.conectado { color:#4caf50; border-color:rgba(76,175,80,.35); }
+    #chip-sync.error     { color:var(--rojo); border-color:rgba(230,57,70,.4); }
+    button.chip { cursor:pointer; touch-action:manipulation; transition:background .12s,transform .08s,border-color .12s; }
+    button.chip:active  { transform:scale(.96); background:rgba(255,255,255,.12); }
+    button.chip:disabled { opacity:.45; cursor:not-allowed; transform:none !important; }
+    #btn-enviar    { border-color:rgba(37,211,102,.55); color:var(--verde); }
+    #btn-enviar:hover  { background:rgba(37,211,102,.14); }
+    #btn-enviar:active { background:rgba(37,211,102,.22); }
+    #btn-enviar:disabled { border-color:rgba(255,255,255,.12); color:#555; }
+    #btn-limpiar   { border-color:rgba(230,57,70,.55); color:var(--rojo); }
+    #btn-limpiar:hover { background:rgba(230,57,70,.13); }
+    #btn-recorrido { border-color:rgba(244,208,63,.55); color:var(--amarillo); }
+    #btn-recorrido:hover { background:rgba(244,208,63,.13); }
+    #btn-recorrido.esperando-click { background:rgba(244,208,63,.10); border-color:rgba(244,208,63,.8); animation:parpadeo 1.4s ease-in-out infinite; }
+    #btn-recorrido.activo { background:rgba(244,208,63,.18); border-color:#fff176; color:#fff176; animation:parpadeo .8s ease-in-out infinite; }
+    #btn-actualizar { border-color:rgba(79,195,247,.55); color:var(--azul); }
+    #btn-actualizar:hover { background:rgba(79,195,247,.13); }
+    #btn-local { border-color:rgba(167,139,250,.55); color:var(--morado); }
+    #btn-local:hover { background:rgba(167,139,250,.13); }
+    #btn-local.buscando { animation:parpadeo .9s ease-in-out infinite; }
+    @keyframes parpadeo { 0%,100%{opacity:1} 50%{opacity:.45} }
+    /* PANEL */
+    #panel { position:fixed; bottom:0; left:0; right:0; z-index:1000; padding:6px 10px clamp(10px,3vw,16px); background:transparent; pointer-events:none; display:flex; flex-direction:column; gap:5px; }
+    #panel > * { pointer-events:auto; }
+    #chip-info { font-size:clamp(10px,1.9vw,12px); font-weight:400; line-height:1.45; height:auto; padding:clamp(5px,1.2vw,8px) clamp(8px,2vw,12px); white-space:normal; cursor:default; color:#fff; border-color:rgba(255,255,255,.18); }
+    #chip-info strong { color:var(--acento); font-weight:600; }
+    #chip-info b      { color:#fff; font-weight:600; }
+    .fila1 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; }
+    .fila2 { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+    .fila1 button.chip, .fila2 button.chip { width:100%; justify-content:center; }
+    /* TOAST */
+    #toast { position:fixed; bottom:clamp(70px,12vw,90px); left:50%; transform:translateX(-50%); background:rgba(20,20,40,.92); border:1px solid rgba(255,255,255,.18); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); color:#fff; font-family:'Barlow',Arial,sans-serif; font-size:clamp(11px,2vw,13px); font-weight:600; padding:8px 20px; border-radius:12px; z-index:3000; pointer-events:none; display:none; text-align:center; max-width:90vw; }
+    /* MARCADORES */
+    .dot-inicio { width:18px; height:18px; background:#ff2200; border:3px solid #fff; border-radius:50%; }
+    .dot-fin    { width:18px; height:18px; background:#8b0000; border:3px solid #fff; border-radius:50%; animation:palpitar 0.8s ease-in-out infinite; }
+    @keyframes palpitar { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.6);opacity:.4} }
+    /* LEAFLET */
     .leaflet-control-container .leaflet-bar,
     .leaflet-control-container .leaflet-bar a,
-    .leaflet-touch .leaflet-bar { box-shadow: none !important; }
-    .leaflet-top.leaflet-left { top: 130px !important; }
-    .leaflet-interactive {
-      stroke: var(--rojo) !important;
-      fill: rgba(230,57,70,.18) !important;
-      animation: circuloPalpita 1.2s ease-in-out infinite;
-    }
-    @keyframes circuloPalpita {
-      0%,100% { stroke-opacity: 1;   stroke-width: 3; }
-      50%      { stroke-opacity: 0.3; stroke-width: 6; }
-    }
-
-    /* Cursor especial mientras espera click para iniciar rastreo */
-    #mapa.esperando-rastreo { cursor: crosshair !important; }
+    .leaflet-touch .leaflet-bar { box-shadow:none !important; }
+    .leaflet-top.leaflet-left   { top:clamp(90px,14vw,115px) !important; }
+    .leaflet-interactive { stroke:var(--rojo) !important; fill:rgba(230,57,70,.18) !important; animation:circuloPalpita 1.2s ease-in-out infinite; }
+    @keyframes circuloPalpita { 0%,100%{stroke-opacity:1;stroke-width:3} 50%{stroke-opacity:0.3;stroke-width:6} }
+    .leaflet-marker-shadow { display:none !important; }
   </style>
 </head>
 <body>
 
-<header>
-  <div class="pulse-icon"></div>
-  <div><h1>Alerta <span>Roja</span></h1></div>
-</header>
-
-<div class="instruccion">
-  🔴 Usa el botón círculo en el mapa &nbsp;→&nbsp;✏️ Dibuja la zona del incidente &nbsp;→&nbsp;👮‍♂️ Envía por WhatsApp 🚔
+<div id="top">
+  <div id="topRow">
+    <div class="chip chip-title"><div class="pulse-icon"></div>&nbsp;Alerta <span>&nbsp;Roja</span></div>
+    <div class="chip chip-hint">🔴 Dibuja zona &nbsp;→&nbsp; 🥷 Recorrido &nbsp;→&nbsp; 📲 WhatsApp</div>
+    <div class="chip" id="chip-sync">⏳ Conectando...</div>
+  </div>
 </div>
 
-<div id="estado-sync">⏳ Conectando...</div>
 <div id="mapa"></div>
+<div id="toast"></div>
 
 <div id="panel">
-  <div id="info">Dibuja un círculo o activa el recorrido para marcar la zona del incidente.</div>
-  <div id="botones">
-    <!-- Fila 1: Recorrido · Borrar · Actualizar -->
-    <div class="fila1">
-      <button id="btn-recorrido" onclick="toggleRecorrido()">🥷 Recorrido</button>
-      <button id="btn-limpiar"   onclick="sonar('limpiar'); limpiarTodo()">🗑️ Borrar</button>
-      <button id="btn-actualizar" onclick="sonar('actualizar'); location.reload()">🔄 Actualizar</button>
-    </div>
-    <!-- Fila 2: Local · WhatsApp -->
-    <div class="fila2">
-      <button id="btn-local" onclick="irAMiUbicacion()">📍 Local</button>
-      <button id="btn-enviar" disabled onclick="sonar('enviar'); enviarWhatsApp()">
-        <svg width="16" height="16" viewBox="0 0 32 32" fill="currentColor">
-          <path d="M16 0C7.163 0 0 7.163 0 16c0 2.824.737 5.476 2.027 7.782L0 32l8.418-2.006A15.94 15.94 0 0016 32c8.837 0 16-7.163 16-16S24.837 0 16 0zm8.29 22.617c-.348.977-2.04 1.865-2.813 1.98-.719.107-1.623.152-2.617-.165-.602-.195-1.375-.455-2.363-.893-4.151-1.793-6.862-5.96-7.072-6.237-.206-.277-1.677-2.232-1.677-4.255 0-2.024 1.063-3.02 1.44-3.43.378-.41.823-.513 1.098-.513.274 0 .548.003.788.014.253.012.592-.097.927.707.348.83 1.183 2.855 1.287 3.063.104.208.174.452.035.73-.14.277-.21.45-.417.693-.208.243-.437.542-.623.727-.208.208-.424.433-.182.85.243.416 1.079 1.78 2.317 2.883 1.59 1.418 2.933 1.857 3.35 2.065.416.208.658.174.9-.104.243-.277 1.044-1.218 1.322-1.634.277-.416.554-.347.935-.208.38.138 2.413 1.138 2.828 1.345.416.208.693.312.796.487.104.174.104 1.009-.244 1.986z"/>
-        </svg>
-        WhatsApp
-      </button>
-    </div>
+  <div class="chip" id="chip-info">Dibuja un círculo o activa el recorrido para marcar la zona del incidente.</div>
+  <div class="fila1">
+    <button class="chip" id="btn-recorrido" onclick="toggleRecorrido()">🥷 Recorrido</button>
+    <button class="chip" id="btn-limpiar"   onclick="soundLimpiar(); limpiarTodo()">🗑️ Borrar</button>
+    <button class="chip" id="btn-actualizar" onclick="soundActualizar(); location.reload()">🔄 Actualizar</button>
+  </div>
+  <div class="fila2">
+    <button class="chip" id="btn-local"  onclick="irAMiUbicacion()">📍 Mi ubicación</button>
+    <button class="chip" id="btn-enviar" disabled onclick="soundEnviar(); enviarWhatsApp()">
+      <svg width="14" height="14" viewBox="0 0 32 32" fill="currentColor" style="flex-shrink:0">
+        <path d="M16 0C7.163 0 0 7.163 0 16c0 2.824.737 5.476 2.027 7.782L0 32l8.418-2.006A15.94 15.94 0 0016 32c8.837 0 16-7.163 16-16S24.837 0 16 0zm8.29 22.617c-.348.977-2.04 1.865-2.813 1.98-.719.107-1.623.152-2.617-.165-.602-.195-1.375-.455-2.363-.893-4.151-1.793-6.862-5.96-7.072-6.237-.206-.277-1.677-2.232-1.677-4.255 0-2.024 1.063-3.02 1.44-3.43.378-.41.823-.513 1.098-.513.274 0 .548.003.788.014.253.012.592-.097.927.707.348.83 1.183 2.855 1.287 3.063.104.208.174.452.035.73-.14.277-.21.45-.417.693-.208.243-.437.542-.623.727-.208.208-.424.433-.182.85.243.416 1.079 1.78 2.317 2.883 1.59 1.418 2.933 1.857 3.35 2.065.416.208.658.174.9-.104.243-.277 1.044-1.218 1.322-1.634.277-.416.554-.347.935-.208.38.138 2.413 1.138 2.828 1.345.416.208.693.312.796.487.104.174.104 1.009-.244 1.986z"/>
+      </svg>
+      &nbsp;WhatsApp
+    </button>
   </div>
 </div>
 
@@ -253,90 +117,65 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-
 <script>
 // ══════════════════════════════════════════════════════
-// MOTOR DE AUDIO — robusto, lazy-init, no falla en móvil
-// (sistema mejorado del Recolector de Basura)
+// MOTOR DE AUDIO — lazy-init robusto (del Recolector de Basura)
 // ══════════════════════════════════════════════════════
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
 let _actx = null;
-function getACtx() {
-  if (!_actx) _actx = new AudioCtx();
-  return _actx;
-}
+function getACtx() { if (!_actx) _actx = new AudioCtx(); return _actx; }
 
-/**
- * Reproduce una secuencia de tonos.
- * @param {Object} opts
- *   freqs  – array de frecuencias (cada una separada por 0.06 s)
- *   dur    – duración de cada tono en segundos
- *   type   – tipo de osciladore ('sine','square','triangle','sawtooth')
- *   vol    – volumen (0–1)
- *   freqEnd – frecuencia final para ramp (opcional, solo aplica al primer tono)
- */
 function playTone(opts) {
   try {
     const ctx = getACtx();
     if (ctx.state === 'suspended') ctx.resume();
-    const { freqs = [440], dur = 0.12, type = 'sine', vol = 0.18, freqEnd } = opts;
+    const { freqs=[440], dur=0.12, type='sine', vol=0.18, freqEnd } = opts;
     freqs.forEach((f, i) => {
-      const osc  = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
+      const osc=ctx.createOscillator(), gain=ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
       osc.type = type;
-      const t0 = ctx.currentTime + i * 0.06;
+      const t0 = ctx.currentTime + i*0.06;
       osc.frequency.setValueAtTime(f, t0);
-      if (freqEnd && i === 0)
-        osc.frequency.exponentialRampToValueAtTime(freqEnd, t0 + dur);
+      if (freqEnd && i===0) osc.frequency.exponentialRampToValueAtTime(freqEnd, t0+dur);
       gain.gain.setValueAtTime(vol, t0);
-      gain.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
-      osc.start(t0);
-      osc.stop(t0 + dur + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, t0+dur);
+      osc.start(t0); osc.stop(t0+dur+0.02);
     });
-  } catch (e) {}
+  } catch(e) {}
 }
 
-// ── Funciones de sonido nombradas (una por acción) ────────────
-function soundMapa()          { playTone({ freqs:[220],             dur:0.055, type:'square',   vol:0.18, freqEnd:60   }); }
-function soundCirculo()       { playTone({ freqs:[880, 1320],       dur:0.11,  type:'sine',     vol:0.22              }); }
-function soundRastreoInicio() { playTone({ freqs:[400, 800, 1200],  dur:0.10,  type:'sine',     vol:0.20              }); }
-function soundRastreoFin()    { playTone({ freqs:[740, 520, 310],   dur:0.13,  type:'triangle', vol:0.22              }); }
-function soundLimpiar()       { playTone({ freqs:[700],             dur:0.26,  type:'sawtooth', vol:0.16, freqEnd:90  }); }
-function soundEnviar()        { playTone({ freqs:[523, 659, 784, 1046], dur:0.28, type:'sine',  vol:0.18              }); }
-function soundActualizar()    {
-  playTone({ freqs:[280],  dur:0.20, type:'square', vol:0.15, freqEnd:560 });
-  playTone({ freqs:[700],  dur:0.14, type:'sine',   vol:0.12              });
-}
-function soundAlerta()        { playTone({ freqs:[440, 554, 659, 880, 1100], dur:0.17, type:'sine', vol:0.30 }); }
-function soundLocal()         { playTone({ freqs:[600, 900],        dur:0.20,  type:'sine',     vol:0.18              }); }
+function soundMapa()          { playTone({ freqs:[220],                 dur:0.055, type:'square',   vol:0.18, freqEnd:60 }); }
+function soundCirculo()       { playTone({ freqs:[880,1320],            dur:0.11,  type:'sine',     vol:0.22 }); }
+function soundRastreoInicio() { playTone({ freqs:[400,800,1200],        dur:0.10,  type:'sine',     vol:0.20 }); }
+function soundRastreoFin()    { playTone({ freqs:[740,520,310],         dur:0.13,  type:'triangle', vol:0.22 }); }
+function soundLimpiar()       { playTone({ freqs:[700],                 dur:0.26,  type:'sawtooth', vol:0.16, freqEnd:90 }); }
+function soundEnviar()        { playTone({ freqs:[523,659,784,1046],    dur:0.28,  type:'sine',     vol:0.18 }); }
+function soundActualizar()    { playTone({ freqs:[280,700],             dur:0.20,  type:'square',   vol:0.15, freqEnd:560 }); }
+function soundAlerta()        { playTone({ freqs:[440,554,659,880,1100],dur:0.17,  type:'sine',     vol:0.30 }); }
+function soundLocal()         { playTone({ freqs:[600,900],             dur:0.20,  type:'sine',     vol:0.18 }); }
 
-/**
- * Función de compatibilidad: mantiene la interfaz sonar('tipo')
- * que usan todos los onclick del HTML, pero ahora delega en
- * las funciones nombradas del motor mejorado.
- */
+// Alias legacy — los onclick del HTML pueden seguir llamando sonar()
 function sonar(tipo) {
-  switch (tipo) {
-    case 'mapa':           soundMapa();          break;
-    case 'circulo':        soundCirculo();       break;
-    case 'rastreo_inicio': soundRastreoInicio(); break;
-    case 'rastreo_fin':    soundRastreoFin();    break;
-    case 'limpiar':        soundLimpiar();       break;
-    case 'enviar':         soundEnviar();        break;
-    case 'actualizar':     soundActualizar();    break;
-    case 'alerta':         soundAlerta();        break;
-    case 'local':          soundLocal();         break;
-  }
+  ({mapa:soundMapa,circulo:soundCirculo,rastreo_inicio:soundRastreoInicio,
+    rastreo_fin:soundRastreoFin,limpiar:soundLimpiar,enviar:soundEnviar,
+    actualizar:soundActualizar,alerta:soundAlerta,local:soundLocal}[tipo]||function(){})();
 }
-
-// Sonido al tocar controles del mapa (zoom, draw toolbar)
 document.addEventListener('click', e => {
   if (e.target.closest('.leaflet-draw-toolbar') ||
-      e.target.closest('.leaflet-draw-actions') ||
+      e.target.closest('.leaflet-draw-actions')  ||
       e.target.closest('.leaflet-control-zoom')) soundMapa();
 });
+
+// ══════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════
+let _toastTimer = null;
+function showToast(msg, ms=3500) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.style.display = 'block';
+  if (_toastTimer) clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => { el.style.display='none'; }, ms);
+}
 
 // ══════════════════════════════════════════════════════
 // FIREBASE
@@ -351,363 +190,237 @@ const firebaseConfig = {
   databaseURL:       "https://seguridadcomunitaria-6e360-default-rtdb.firebaseio.com"
 };
 firebase.initializeApp(firebaseConfig);
-const db       = firebase.database();
-const refMapa  = db.ref('alertas/activa');
-const estadoEl = document.getElementById('estado-sync');
+const db      = firebase.database();
+const refMapa = db.ref('alertas/activa');
+const syncEl  = document.getElementById('chip-sync');
 
 // ══════════════════════════════════════════════════════
-// CONFIGURACIÓN
+// CONFIG
 // ══════════════════════════════════════════════════════
-const WHATSAPP_NUMS = ['593963761330', '59399591992'];
+const WHATSAPP_NUMS = ['593963761330','59399591992'];
 const ZOOM_INICIAL  = 17;
 const LAT_DEFAULT   = 0.23311819176648024;
 const LNG_DEFAULT   = -78.26155393719128;
-const MI_ID = 'usr_' + Math.random().toString(36).substr(2, 9);
+const MI_ID = 'usr_' + Math.random().toString(36).substr(2,9);
 
 // ══════════════════════════════════════════════════════
-// ICONOS MARCADORES
+// ICONOS
 // ══════════════════════════════════════════════════════
-const iconoInicio = L.divIcon({
-  className: '',
-  html: '<div class="dot-inicio"></div>',
-  iconSize: [18,18], iconAnchor: [9,9]
-});
-const iconoFin = L.divIcon({
-  className: '',
-  html: '<div class="dot-fin"></div>',
-  iconSize: [18,18], iconAnchor: [9,9]
-});
+const iconoInicio = L.divIcon({ className:'', html:'<div class="dot-inicio"></div>', iconSize:[18,18], iconAnchor:[9,9] });
+const iconoFin    = L.divIcon({ className:'', html:'<div class="dot-fin"></div>',    iconSize:[18,18], iconAnchor:[9,9] });
 
 // ══════════════════════════════════════════════════════
 // MAPA
 // ══════════════════════════════════════════════════════
-const mapa = L.map('mapa', { attributionControl: false })
+const mapa = L.map('mapa', { attributionControl:false, tap:true, tapTolerance:15 })
               .setView([LAT_DEFAULT, LNG_DEFAULT], ZOOM_INICIAL);
-L.control.attribution({ prefix: false, position: 'bottomright' }).addTo(mapa);
+L.control.attribution({ prefix:false, position:'bottomright' }).addTo(mapa);
 mapa.attributionControl.setPrefix('RedOtavalo');
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '', maxZoom: 19
-}).addTo(mapa);
-
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19 }).addTo(mapa);
 if (navigator.geolocation)
   navigator.geolocation.getCurrentPosition(pos =>
     mapa.setView([pos.coords.latitude, pos.coords.longitude], ZOOM_INICIAL));
 
-// ══════════════════════════════════════════════════════
-// CAPAS
-// ══════════════════════════════════════════════════════
 const capasDibujadas = new L.FeatureGroup().addTo(mapa);
 const controlDibujo  = new L.Control.Draw({
-  position: 'topleft',
-  draw: {
-    circle:       { shapeOptions: { color: '#e63946', fillOpacity: 0.18 } },
-    polygon: false, polyline: false, rectangle: false,
-    marker:  false, circlemarker: false
-  },
-  edit: { featureGroup: capasDibujadas }
+  position:'topleft',
+  draw:{ circle:{ shapeOptions:{ color:'#e63946', fillOpacity:0.18 } },
+         polygon:false, polyline:false, rectangle:false, marker:false, circlemarker:false },
+  edit:{ featureGroup:capasDibujadas }
 });
 mapa.addControl(controlDibujo);
 
 // ══════════════════════════════════════════════════════
-// ESTADO LOCAL
+// ESTADO
 // ══════════════════════════════════════════════════════
-let circuloActual   = null;
-let recorridoActual = null;
-let marcadorInicio  = null;
-let marcadorFin     = null;
-let modoRecorrido   = false;
-let esperandoClickInicio = false;
-let dibujandoRecorrido   = false;
-let puntosRecorrido = [];
-let cargaInicial    = true;
-let marcadorLocal   = null;
+let circuloActual=null, recorridoActual=null, marcadorInicio=null, marcadorFin=null;
+let modoRecorrido=false, esperandoClickInicio=false, dibujandoRecorrido=false;
+let puntosRecorrido=[], cargaInicial=true, marcadorLocal=null;
 
-// ══════════════════════════════════════════════════════
-// HELPERS MARCADORES
-// ══════════════════════════════════════════════════════
 function ponerInicio(latlng) {
   if (marcadorInicio) capasDibujadas.removeLayer(marcadorInicio);
-  marcadorInicio = L.marker(latlng, { icon: iconoInicio, zIndexOffset: 900 });
+  marcadorInicio = L.marker(latlng, { icon:iconoInicio, zIndexOffset:900 });
   capasDibujadas.addLayer(marcadorInicio);
 }
 function ponerFin(latlng) {
   if (marcadorFin) capasDibujadas.removeLayer(marcadorFin);
-  marcadorFin = L.marker(latlng, { icon: iconoFin, zIndexOffset: 1000 });
+  marcadorFin = L.marker(latlng, { icon:iconoFin, zIndexOffset:1000 });
   capasDibujadas.addLayer(marcadorFin);
 }
 function quitarMarcadores() {
-  if (marcadorInicio) { capasDibujadas.removeLayer(marcadorInicio); marcadorInicio = null; }
-  if (marcadorFin)    { capasDibujadas.removeLayer(marcadorFin);    marcadorFin    = null; }
+  if (marcadorInicio) { capasDibujadas.removeLayer(marcadorInicio); marcadorInicio=null; }
+  if (marcadorFin)    { capasDibujadas.removeLayer(marcadorFin);    marcadorFin=null; }
 }
 
-// ══════════════════════════════════════════════════════
-// RENDER FIREBASE
-// ══════════════════════════════════════════════════════
-function renderCirculo(datos) {
+function renderCirculo(d) {
   if (circuloActual) capasDibujadas.removeLayer(circuloActual);
-  circuloActual = L.circle([datos.lat, datos.lng], {
-    radius: datos.radio, color: '#e63946', fillOpacity: 0.18
-  });
+  circuloActual = L.circle([d.lat,d.lng], { radius:d.radio, color:'#e63946', fillOpacity:0.18 });
   capasDibujadas.addLayer(circuloActual);
 }
 function renderRecorrido(puntos) {
   if (recorridoActual) capasDibujadas.removeLayer(recorridoActual);
   quitarMarcadores();
   puntosRecorrido = puntos.map(p => L.latLng(p.lat, p.lng));
-  recorridoActual = L.polyline(puntosRecorrido, {
-    color: '#f4d03f', weight: 4, opacity: .85, dashArray: '8, 6'
-  });
+  recorridoActual = L.polyline(puntosRecorrido, { color:'#f4d03f', weight:4, opacity:.85, dashArray:'8,6' });
   capasDibujadas.addLayer(recorridoActual);
-  if (puntosRecorrido.length > 0) {
-    ponerInicio(puntosRecorrido[0]);
-    ponerFin(puntosRecorrido[puntosRecorrido.length - 1]);
-  }
+  if (puntosRecorrido.length > 0) { ponerInicio(puntosRecorrido[0]); ponerFin(puntosRecorrido[puntosRecorrido.length-1]); }
 }
 
-// ══════════════════════════════════════════════════════
-// AUTO-POSICIONAMIENTO RECEPTORES
-// ══════════════════════════════════════════════════════
 function volarAlIncidente(datos, autor) {
   if (autor === MI_ID) return;
   if (datos.circulo)
-    mapa.flyTo([datos.circulo.lat, datos.circulo.lng], 18, { animate: true, duration: 1.2 });
+    mapa.flyTo([datos.circulo.lat, datos.circulo.lng], 18, { animate:true, duration:1.2 });
   else if (datos.recorrido && datos.recorrido.length > 0)
-    mapa.flyTo([datos.recorrido[0].lat, datos.recorrido[0].lng], 18, { animate: true, duration: 1.2 });
+    mapa.flyTo([datos.recorrido[0].lat, datos.recorrido[0].lng], 18, { animate:true, duration:1.2 });
   soundAlerta();
-  estadoEl.textContent = '🚨 ¡NUEVO INCIDENTE!';
-  estadoEl.className   = 'error';
-  setTimeout(() => {
-    estadoEl.textContent = '🟢 Sincronizado en Tiempo Real';
-    estadoEl.className   = 'conectado';
-  }, 3000);
+  syncEl.textContent='🚨 ¡NUEVO INCIDENTE!'; syncEl.className='chip error';
+  showToast('🚨 ¡Nuevo incidente recibido!', 4000);
+  setTimeout(() => { syncEl.textContent='🟢 En tiempo real'; syncEl.className='chip conectado'; }, 3500);
 }
 
-// ══════════════════════════════════════════════════════
-// FIREBASE: ESCUCHAR
-// ══════════════════════════════════════════════════════
-refMapa.on('value', snapshot => {
-  const datos = snapshot.val();
-  estadoEl.className   = 'conectado';
-  estadoEl.textContent = '🟢 Sincronizado en Tiempo Real';
+refMapa.on('value', snap => {
+  const datos = snap.val();
+  syncEl.className='chip conectado'; syncEl.textContent='🟢 En tiempo real';
   if (!datos) {
     capasDibujadas.clearLayers();
-    circuloActual = null; recorridoActual = null;
-    marcadorInicio = null; marcadorFin = null; puntosRecorrido = [];
-    cargaInicial = false; resetInfo(); return;
+    circuloActual=null; recorridoActual=null; marcadorInicio=null; marcadorFin=null; puntosRecorrido=[];
+    cargaInicial=false; resetInfo(); return;
   }
   if (datos.circulo)                                 renderCirculo(datos.circulo);
   if (datos.recorrido && datos.recorrido.length > 1) renderRecorrido(datos.recorrido);
-  if (!cargaInicial) volarAlIncidente(datos, datos.autor || '');
-  cargaInicial = false;
-  actualizarInfo();
-}, error => {
-  estadoEl.className   = 'error';
-  estadoEl.textContent = '🔴 Sin conexión';
-});
+  if (!cargaInicial) volarAlIncidente(datos, datos.autor||'');
+  cargaInicial=false; actualizarInfo();
+}, () => { syncEl.className='chip error'; syncEl.textContent='🔴 Sin conexión'; });
 
-// ══════════════════════════════════════════════════════
-// FIREBASE: PUBLICAR
-// ══════════════════════════════════════════════════════
 function publicarEstado() {
-  const payload = { autor: MI_ID };
-  if (circuloActual) {
-    const c = circuloActual.getLatLng();
-    payload.circulo = { lat: c.lat, lng: c.lng, radio: circuloActual.getRadius() };
-  }
-  if (recorridoActual && puntosRecorrido.length > 1)
-    payload.recorrido = puntosRecorrido.map(p => ({ lat: p.lat, lng: p.lng }));
+  const payload = { autor:MI_ID };
+  if (circuloActual) { const c=circuloActual.getLatLng(); payload.circulo={ lat:c.lat, lng:c.lng, radio:circuloActual.getRadius() }; }
+  if (recorridoActual && puntosRecorrido.length > 1) payload.recorrido = puntosRecorrido.map(p=>({ lat:p.lat, lng:p.lng }));
   if (Object.keys(payload).length > 1) refMapa.set(payload);
 }
 
-// ══════════════════════════════════════════════════════
-// EVENTOS CÍRCULO LEAFLET DRAW
-// ══════════════════════════════════════════════════════
 mapa.on(L.Draw.Event.CREATED, e => {
   soundCirculo();
   if (circuloActual) capasDibujadas.removeLayer(circuloActual);
-  circuloActual = e.layer;
-  capasDibujadas.addLayer(circuloActual);
+  circuloActual = e.layer; capasDibujadas.addLayer(circuloActual);
   publicarEstado(); actualizarInfo();
 });
 mapa.on(L.Draw.Event.EDITED,  () => { publicarEstado(); actualizarInfo(); });
-mapa.on(L.Draw.Event.DELETED, () => { circuloActual = null; publicarEstado(); actualizarInfo(); });
+mapa.on(L.Draw.Event.DELETED, () => { circuloActual=null; publicarEstado(); actualizarInfo(); });
 
 // ══════════════════════════════════════════════════════
-// RECORRIDO SOSPECHOSO
+// RECORRIDO
 // ══════════════════════════════════════════════════════
 function toggleRecorrido() {
   const btn = document.getElementById('btn-recorrido');
-
   if (modoRecorrido) {
     soundRastreoFin();
-    modoRecorrido          = false;
-    esperandoClickInicio   = false;
-    dibujandoRecorrido     = false;
-    btn.classList.remove('activo', 'esperando-click');
-    btn.textContent = '🥷 Recorrido';
+    modoRecorrido=false; esperandoClickInicio=false; dibujandoRecorrido=false;
+    btn.classList.remove('activo','esperando-click'); btn.textContent='🥷 Recorrido';
     mapa.dragging.enable();
     document.getElementById('mapa').classList.remove('esperando-rastreo');
-    document.getElementById('mapa').style.cursor = '';
-    if (puntosRecorrido.length > 0)
-      ponerFin(puntosRecorrido[puntosRecorrido.length - 1]);
+    document.getElementById('mapa').style.cursor='';
+    if (puntosRecorrido.length > 0) ponerFin(puntosRecorrido[puntosRecorrido.length-1]);
     if (puntosRecorrido.length > 1) publicarEstado();
-    actualizarInfo();
-    return;
+    actualizarInfo(); return;
   }
-
   soundRastreoInicio();
-  modoRecorrido        = true;
-  esperandoClickInicio = true;
-  dibujandoRecorrido   = false;
-  btn.classList.add('esperando-click');
-  btn.textContent = '⏹ Detener';
+  modoRecorrido=true; esperandoClickInicio=true; dibujandoRecorrido=false;
+  btn.classList.add('esperando-click'); btn.textContent='⏹ Detener';
   document.getElementById('mapa').classList.add('esperando-rastreo');
-  document.getElementById('info').innerHTML =
-    '<strong>🟡 Haz click en el mapa</strong> para comenzar a trazar el recorrido.';
+  setInfo('<strong>🟡 Toca el mapa</strong> para comenzar a trazar el recorrido.');
 }
 
-// ── Click en el mapa (desktop) ───────────────────────────────
 mapa.on('click', e => {
   if (!modoRecorrido || !esperandoClickInicio) return;
-  esperandoClickInicio = false;
-  dibujandoRecorrido   = true;
+  esperandoClickInicio=false; dibujandoRecorrido=true;
   mapa.dragging.disable();
   document.getElementById('mapa').classList.remove('esperando-rastreo');
-  document.getElementById('mapa').style.cursor = 'crosshair';
-  document.getElementById('info').innerHTML =
-    '<strong>🔴 Rastreo activo</strong><br>Arrastra el mouse para trazar el camino.';
+  document.getElementById('mapa').style.cursor='crosshair';
+  setInfo('<strong>🔴 Rastreo activo</strong><br>Arrastra para trazar el camino.');
   agregarPunto(e.latlng);
 });
+mapa.on('mousemove', e => { if (modoRecorrido && dibujandoRecorrido) agregarPunto(e.latlng); });
+mapa.on('mouseup',   () => { if (modoRecorrido && dibujandoRecorrido) toggleRecorrido(); });
 
-// ── Mousemove (desktop) ─────────────────────────────────────
-mapa.on('mousemove', e => {
-  if (modoRecorrido && dibujandoRecorrido) agregarPunto(e.latlng);
-});
-
-// ── Mouseup (desktop) ───────────────────────────────────────
-mapa.on('mouseup', () => {
-  if (modoRecorrido && dibujandoRecorrido) toggleRecorrido();
-});
-
-// ── Touch (móvil) ────────────────────────────────────────────
 const mapaEl = document.getElementById('mapa');
 mapaEl.addEventListener('touchmove', e => {
   if (!modoRecorrido) return;
   e.preventDefault();
   if (esperandoClickInicio) {
-    esperandoClickInicio = false;
-    dibujandoRecorrido   = true;
-    mapa.dragging.disable();
+    esperandoClickInicio=false; dibujandoRecorrido=true; mapa.dragging.disable();
     document.getElementById('mapa').classList.remove('esperando-rastreo');
-    document.getElementById('mapa').style.cursor = 'crosshair';
+    document.getElementById('mapa').style.cursor='crosshair';
   }
-  const touch = e.touches[0];
-  const rect  = mapaEl.getBoundingClientRect();
-  agregarPunto(mapa.containerPointToLatLng(
-    L.point(touch.clientX - rect.left, touch.clientY - rect.top)));
-}, { passive: false });
-
-mapaEl.addEventListener('touchend', () => {
-  if (modoRecorrido && dibujandoRecorrido) toggleRecorrido();
-});
+  const touch=e.touches[0], rect=mapaEl.getBoundingClientRect();
+  agregarPunto(mapa.containerPointToLatLng(L.point(touch.clientX-rect.left, touch.clientY-rect.top)));
+}, { passive:false });
+mapaEl.addEventListener('touchend', () => { if (modoRecorrido && dibujandoRecorrido) toggleRecorrido(); });
 
 function agregarPunto(latlng) {
   if (puntosRecorrido.length > 0) {
-    const ult = puntosRecorrido[puntosRecorrido.length - 1];
-    if (mapa.distance(ult, latlng) < 3) return;
+    if (mapa.distance(puntosRecorrido[puntosRecorrido.length-1], latlng) < 3) return;
   }
   if (puntosRecorrido.length === 0) ponerInicio(latlng);
   puntosRecorrido.push(latlng);
   if (recorridoActual) capasDibujadas.removeLayer(recorridoActual);
-  recorridoActual = L.polyline(puntosRecorrido, {
-    color: '#f4d03f', weight: 4, opacity: .85, dashArray: '8, 6'
-  });
+  recorridoActual = L.polyline(puntosRecorrido, { color:'#f4d03f', weight:4, opacity:.85, dashArray:'8,6' });
   capasDibujadas.addLayer(recorridoActual);
-  document.getElementById('btn-enviar').disabled = false;
+  document.getElementById('btn-enviar').disabled=false;
 }
 
 // ══════════════════════════════════════════════════════
-// BOTÓN LOCAL — ir a mi ubicación GPS
+// GPS LOCAL
 // ══════════════════════════════════════════════════════
 function irAMiUbicacion() {
   soundLocal();
   const btn = document.getElementById('btn-local');
-  if (!navigator.geolocation) {
-    document.getElementById('info').innerHTML =
-      '<strong style="color:var(--rojo)">⚠️ GPS no disponible</strong> en este dispositivo.';
-    return;
-  }
-  btn.classList.add('buscando');
-  btn.textContent = '⏳ GPS...';
+  if (!navigator.geolocation) { setInfo('<strong style="color:var(--rojo)">⚠️ GPS no disponible</strong> en este dispositivo.'); return; }
+  btn.classList.add('buscando'); btn.textContent='⏳ GPS...';
   navigator.geolocation.getCurrentPosition(
     pos => {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-      const acc = Math.round(pos.coords.accuracy);
-      mapa.flyTo([lat, lng], 18, { animate: true, duration: 1.2 });
-
-      const iconoYo = L.divIcon({
-        className: '',
-        html: `<div style="
-          width:22px;height:22px;
-          background:#a78bfa;
-          border:3px solid #fff;
-          border-radius:50%;
-          box-shadow:0 0 0 4px rgba(167,139,250,.35);
-        "></div>`,
-        iconSize: [22,22], iconAnchor: [11,11]
-      });
+      const lat=pos.coords.latitude, lng=pos.coords.longitude, acc=Math.round(pos.coords.accuracy);
+      mapa.flyTo([lat,lng], 18, { animate:true, duration:1.2 });
+      const iconoYo = L.divIcon({ className:'', html:`<div style="width:22px;height:22px;background:#a78bfa;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 5px rgba(167,139,250,.3);"></div>`, iconSize:[22,22], iconAnchor:[11,11] });
       if (marcadorLocal) mapa.removeLayer(marcadorLocal);
-      marcadorLocal = L.marker([lat, lng], { icon: iconoYo, zIndexOffset: 2000 }).addTo(mapa);
-      marcadorLocal.bindPopup(
-        `<b>📍 Mi ubicación</b><br>${lat.toFixed(6)}, ${lng.toFixed(6)}<br>Precisión: ±${acc} m`
-      ).openPopup();
-
-      btn.classList.remove('buscando');
-      btn.textContent = '📍 Local';
-      document.getElementById('info').innerHTML =
-        `<strong>📍 Mi ubicación</strong><br>Lat: <b>${lat.toFixed(6)}</b> · Lng: <b>${lng.toFixed(6)}</b><br>Precisión: ±${acc} m`;
+      marcadorLocal = L.marker([lat,lng], { icon:iconoYo, zIndexOffset:2000 }).addTo(mapa);
+      marcadorLocal.bindPopup(`<b>📍 Mi ubicación</b><br>${lat.toFixed(6)}, ${lng.toFixed(6)}<br>Precisión: ±${acc} m`).openPopup();
+      btn.classList.remove('buscando'); btn.textContent='📍 Mi ubicación';
+      setInfo(`<strong>📍 Mi ubicación</strong><br>Lat: <b>${lat.toFixed(6)}</b> · Lng: <b>${lng.toFixed(6)}</b><br>Precisión: ±${acc} m`);
       soundCirculo();
     },
     err => {
-      btn.classList.remove('buscando');
-      btn.textContent = '📍 Local';
-      const msg = err.code === 1
-        ? 'Permiso de ubicación denegado.'
-        : err.code === 2 ? 'GPS no disponible ahora.'
-        : 'Tiempo de espera agotado.';
-      document.getElementById('info').innerHTML =
-        `<strong style="color:var(--rojo)">⚠️ ${msg}</strong>`;
+      btn.classList.remove('buscando'); btn.textContent='📍 Mi ubicación';
+      const msg = err.code===1?'Permiso denegado.':err.code===2?'GPS no disponible.':'Tiempo agotado.';
+      setInfo(`<strong style="color:var(--rojo)">⚠️ ${msg}</strong>`);
     },
-    { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+    { enableHighAccuracy:true, timeout:12000, maximumAge:0 }
   );
 }
 
 // ══════════════════════════════════════════════════════
-// INFO PANEL
+// INFO
 // ══════════════════════════════════════════════════════
+function setInfo(html) { document.getElementById('chip-info').innerHTML = html; }
 function actualizarInfo() {
   const tieneC = circuloActual !== null;
   const tieneR = recorridoActual !== null && puntosRecorrido.length > 1;
   if (!tieneC && !tieneR) { resetInfo(); return; }
   let html = '';
   if (tieneC) {
-    const c = circuloActual.getLatLng(), r = Math.round(circuloActual.getRadius());
-    html += `<strong>📍 Zona Incidente</strong><br>Centro: <b>${c.lat.toFixed(6)}, ${c.lng.toFixed(6)}</b><br>Radio aprox.: <b>${r} metros</b><br>`;
+    const c=circuloActual.getLatLng(), r=Math.round(circuloActual.getRadius());
+    html += `<strong>📍 Zona Incidente</strong><br>Centro: <b>${c.lat.toFixed(6)}, ${c.lng.toFixed(6)}</b> · Radio: <b>${r} m</b><br>`;
   }
   if (tieneR) {
-    const ini = puntosRecorrido[0], fin = puntosRecorrido[puntosRecorrido.length - 1];
-    html += `<strong>🥷 Recorrido Sospechoso</strong><br>
-             🔴 Inicio: <b>${ini.lat.toFixed(6)}, ${ini.lng.toFixed(6)}</b><br>
-             🔴 Fin: <b>${fin.lat.toFixed(6)}, ${fin.lng.toFixed(6)}</b><br>
-             Puntos: <b>${puntosRecorrido.length}</b>`;
+    const ini=puntosRecorrido[0], fin=puntosRecorrido[puntosRecorrido.length-1];
+    html += `<strong>🥷 Recorrido Sospechoso</strong><br>🔴 Inicio: <b>${ini.lat.toFixed(6)}, ${ini.lng.toFixed(6)}</b><br>🔴 Fin: <b>${fin.lat.toFixed(6)}, ${fin.lng.toFixed(6)}</b> · Puntos: <b>${puntosRecorrido.length}</b>`;
   }
-  document.getElementById('info').innerHTML = html;
-  document.getElementById('btn-enviar').disabled = false;
+  setInfo(html);
+  document.getElementById('btn-enviar').disabled=false;
 }
 function resetInfo() {
-  document.getElementById('info').textContent = 'Dibuja un círculo o activa el recorrido para marcar la zona del incidente.';
-  document.getElementById('btn-enviar').disabled = true;
+  setInfo('Dibuja un círculo o activa el recorrido para marcar la zona del incidente.');
+  document.getElementById('btn-enviar').disabled=true;
 }
 
 // ══════════════════════════════════════════════════════
@@ -715,34 +428,31 @@ function resetInfo() {
 // ══════════════════════════════════════════════════════
 function limpiarTodo() {
   capasDibujadas.clearLayers();
-  circuloActual = null; recorridoActual = null;
-  marcadorInicio = null; marcadorFin = null; puntosRecorrido = [];
-  if (marcadorLocal) { mapa.removeLayer(marcadorLocal); marcadorLocal = null; }
+  circuloActual=null; recorridoActual=null; marcadorInicio=null; marcadorFin=null; puntosRecorrido=[];
+  if (marcadorLocal) { mapa.removeLayer(marcadorLocal); marcadorLocal=null; }
   if (modoRecorrido) toggleRecorrido();
-  refMapa.remove();
-  resetInfo();
+  refMapa.remove(); resetInfo();
+  showToast('🗑️ Mapa limpiado', 2200);
 }
 
 // ══════════════════════════════════════════════════════
 // WHATSAPP
 // ══════════════════════════════════════════════════════
 function enviarWhatsApp() {
-  const tieneC = circuloActual !== null;
-  const tieneR = recorridoActual !== null && puntosRecorrido.length > 1;
+  const tieneC=circuloActual!==null, tieneR=recorridoActual!==null&&puntosRecorrido.length>1;
   if (!tieneC && !tieneR) return;
-  let msg = `🚨 *Alerta Roja*\n\n`;
+  let msg=`🚨 *Alerta Roja*\n\n`;
   if (tieneC) {
-    const c = circuloActual.getLatLng();
-    const lat = c.lat.toFixed(6), lng = c.lng.toFixed(6);
-    const r = Math.round(circuloActual.getRadius());
-    msg += `📍 *Zona Incidente:*\nLatitud: ${lat}\nLongitud: ${lng}\nRadio Aprox.: ${r} metros\n🗺️ https://maps.google.com/?q=${lat},${lng}\n\n`;
+    const c=circuloActual.getLatLng(), lat=c.lat.toFixed(6), lng=c.lng.toFixed(6), r=Math.round(circuloActual.getRadius());
+    msg+=`📍 *Zona Incidente:*\nLatitud: ${lat}\nLongitud: ${lng}\nRadio Aprox.: ${r} metros\n🗺️ https://maps.google.com/?q=${lat},${lng}\n\n`;
   }
   if (tieneR) {
-    const ini = puntosRecorrido[0], fin = puntosRecorrido[puntosRecorrido.length - 1];
-    msg += `🥷 *Recorrido Sospechoso:*\n🔴 Inicio: ${ini.lat.toFixed(6)}, ${ini.lng.toFixed(6)}\n🗺️ https://maps.google.com/?q=${ini.lat.toFixed(6)},${ini.lng.toFixed(6)}\n🔴 Fin: ${fin.lat.toFixed(6)}, ${fin.lng.toFixed(6)}\n🗺️ https://maps.google.com/?q=${fin.lat.toFixed(6)},${fin.lng.toFixed(6)}\nPuntos: ${puntosRecorrido.length}\n\n`;
+    const ini=puntosRecorrido[0], fin=puntosRecorrido[puntosRecorrido.length-1];
+    msg+=`🥷 *Recorrido Sospechoso:*\n🔴 Inicio: ${ini.lat.toFixed(6)}, ${ini.lng.toFixed(6)}\n🗺️ https://maps.google.com/?q=${ini.lat.toFixed(6)},${ini.lng.toFixed(6)}\n🔴 Fin: ${fin.lat.toFixed(6)}, ${fin.lng.toFixed(6)}\n🗺️ https://maps.google.com/?q=${fin.lat.toFixed(6)},${fin.lng.toFixed(6)}\nPuntos: ${puntosRecorrido.length}\n\n`;
   }
-  msg += `⏰ ${new Date().toLocaleString('es-EC', {timeZone:'America/Guayaquil'})}`;
-  WHATSAPP_NUMS.forEach(num => window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank'));
+  msg+=`⏰ ${new Date().toLocaleString('es-EC',{timeZone:'America/Guayaquil'})}`;
+  WHATSAPP_NUMS.forEach(num => window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`,'_blank'));
+  showToast('✅ Enviando por WhatsApp...', 3000);
 }
 </script>
 </body>
