@@ -256,69 +256,86 @@
 
 <script>
 // ══════════════════════════════════════════════════════
-// AUDIO — cada acción tiene su propio sonido único
+// MOTOR DE AUDIO — robusto, lazy-init, no falla en móvil
+// (sistema mejorado del Recolector de Basura)
 // ══════════════════════════════════════════════════════
-const actx = new (window.AudioContext || window.webkitAudioContext)();
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let _actx = null;
+function getACtx() {
+  if (!_actx) _actx = new AudioCtx();
+  return _actx;
+}
 
+/**
+ * Reproduce una secuencia de tonos.
+ * @param {Object} opts
+ *   freqs  – array de frecuencias (cada una separada por 0.06 s)
+ *   dur    – duración de cada tono en segundos
+ *   type   – tipo de osciladore ('sine','square','triangle','sawtooth')
+ *   vol    – volumen (0–1)
+ *   freqEnd – frecuencia final para ramp (opcional, solo aplica al primer tono)
+ */
+function playTone(opts) {
+  try {
+    const ctx = getACtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    const { freqs = [440], dur = 0.12, type = 'sine', vol = 0.18, freqEnd } = opts;
+    freqs.forEach((f, i) => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = type;
+      const t0 = ctx.currentTime + i * 0.06;
+      osc.frequency.setValueAtTime(f, t0);
+      if (freqEnd && i === 0)
+        osc.frequency.exponentialRampToValueAtTime(freqEnd, t0 + dur);
+      gain.gain.setValueAtTime(vol, t0);
+      gain.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+      osc.start(t0);
+      osc.stop(t0 + dur + 0.02);
+    });
+  } catch (e) {}
+}
+
+// ── Funciones de sonido nombradas (una por acción) ────────────
+function soundMapa()          { playTone({ freqs:[220],             dur:0.055, type:'square',   vol:0.18, freqEnd:60   }); }
+function soundCirculo()       { playTone({ freqs:[880, 1320],       dur:0.11,  type:'sine',     vol:0.22              }); }
+function soundRastreoInicio() { playTone({ freqs:[400, 800, 1200],  dur:0.10,  type:'sine',     vol:0.20              }); }
+function soundRastreoFin()    { playTone({ freqs:[740, 520, 310],   dur:0.13,  type:'triangle', vol:0.22              }); }
+function soundLimpiar()       { playTone({ freqs:[700],             dur:0.26,  type:'sawtooth', vol:0.16, freqEnd:90  }); }
+function soundEnviar()        { playTone({ freqs:[523, 659, 784, 1046], dur:0.28, type:'sine',  vol:0.18              }); }
+function soundActualizar()    {
+  playTone({ freqs:[280],  dur:0.20, type:'square', vol:0.15, freqEnd:560 });
+  playTone({ freqs:[700],  dur:0.14, type:'sine',   vol:0.12              });
+}
+function soundAlerta()        { playTone({ freqs:[440, 554, 659, 880, 1100], dur:0.17, type:'sine', vol:0.30 }); }
+function soundLocal()         { playTone({ freqs:[600, 900],        dur:0.20,  type:'sine',     vol:0.18              }); }
+
+/**
+ * Función de compatibilidad: mantiene la interfaz sonar('tipo')
+ * que usan todos los onclick del HTML, pero ahora delega en
+ * las funciones nombradas del motor mejorado.
+ */
 function sonar(tipo) {
-  if (actx.state === 'suspended') actx.resume();
-  const t = actx.currentTime;
-
-  const n = (type, freq, start, dur, vol, freqEnd) => {
-    const o = actx.createOscillator(), g = actx.createGain();
-    o.connect(g); g.connect(actx.destination);
-    o.type = type;
-    o.frequency.setValueAtTime(freq, start);
-    if (freqEnd) o.frequency.exponentialRampToValueAtTime(freqEnd, start + dur);
-    g.gain.setValueAtTime(vol, start);
-    g.gain.exponentialRampToValueAtTime(0.001, start + dur);
-    o.start(start); o.stop(start + dur + 0.01);
-  };
-
   switch (tipo) {
-    case 'mapa':
-      n('square', 220, t, 0.055, 0.18, 60);
-      break;
-    case 'circulo':
-      n('sine', 880,  t,       0.11, 0.22, 1320);
-      n('sine', 1320, t+0.14,  0.09, 0.14);
-      break;
-    case 'rastreo_inicio':
-      n('sine', 400, t,       0.06, 0.25, 800);
-      n('sine', 800, t+0.07,  0.06, 0.22, 1200);
-      n('sine',1200, t+0.14,  0.07, 0.20);
-      break;
-    case 'rastreo_fin':
-      n('triangle', 740, t,       0.13, 0.22);
-      n('triangle', 520, t+0.14,  0.13, 0.22);
-      n('triangle', 310, t+0.28,  0.15, 0.22);
-      break;
-    case 'limpiar':
-      n('sawtooth', 700, t, 0.26, 0.16, 90);
-      break;
-    case 'enviar':
-      [523, 659, 784, 1046].forEach((f, i) =>
-        n('sine', f, t + i*0.07, 0.28, 0.18));
-      break;
-    case 'actualizar':
-      n('square', 280, t,       0.05, 0.20, 560);
-      n('sine',   700, t+0.07,  0.07, 0.14);
-      break;
-    case 'alerta':
-      [440, 554, 659, 880, 1100].forEach((f, i) =>
-        n('sine', f, t + i*0.11, 0.17, 0.30));
-      break;
-    case 'local':
-      n('sine', 600, t,       0.07, 0.20, 900);
-      n('sine', 900, t+0.08,  0.08, 0.18, 1200);
-      break;
+    case 'mapa':           soundMapa();          break;
+    case 'circulo':        soundCirculo();       break;
+    case 'rastreo_inicio': soundRastreoInicio(); break;
+    case 'rastreo_fin':    soundRastreoFin();    break;
+    case 'limpiar':        soundLimpiar();       break;
+    case 'enviar':         soundEnviar();        break;
+    case 'actualizar':     soundActualizar();    break;
+    case 'alerta':         soundAlerta();        break;
+    case 'local':          soundLocal();         break;
   }
 }
 
+// Sonido al tocar controles del mapa (zoom, draw toolbar)
 document.addEventListener('click', e => {
   if (e.target.closest('.leaflet-draw-toolbar') ||
       e.target.closest('.leaflet-draw-actions') ||
-      e.target.closest('.leaflet-control-zoom')) sonar('mapa');
+      e.target.closest('.leaflet-control-zoom')) soundMapa();
 });
 
 // ══════════════════════════════════════════════════════
@@ -399,11 +416,11 @@ let recorridoActual = null;
 let marcadorInicio  = null;
 let marcadorFin     = null;
 let modoRecorrido   = false;
-let esperandoClickInicio = false; // NUEVO: espera click en mapa para empezar a trazar
-let dibujandoRecorrido   = false; // NUEVO: está dibujando activamente
+let esperandoClickInicio = false;
+let dibujandoRecorrido   = false;
 let puntosRecorrido = [];
 let cargaInicial    = true;
-let marcadorLocal   = null;       // NUEVO: marcador de ubicación propia
+let marcadorLocal   = null;
 
 // ══════════════════════════════════════════════════════
 // HELPERS MARCADORES
@@ -456,7 +473,7 @@ function volarAlIncidente(datos, autor) {
     mapa.flyTo([datos.circulo.lat, datos.circulo.lng], 18, { animate: true, duration: 1.2 });
   else if (datos.recorrido && datos.recorrido.length > 0)
     mapa.flyTo([datos.recorrido[0].lat, datos.recorrido[0].lng], 18, { animate: true, duration: 1.2 });
-  sonar('alerta');
+  soundAlerta();
   estadoEl.textContent = '🚨 ¡NUEVO INCIDENTE!';
   estadoEl.className   = 'error';
   setTimeout(() => {
@@ -506,7 +523,7 @@ function publicarEstado() {
 // EVENTOS CÍRCULO LEAFLET DRAW
 // ══════════════════════════════════════════════════════
 mapa.on(L.Draw.Event.CREATED, e => {
-  sonar('circulo');
+  soundCirculo();
   if (circuloActual) capasDibujadas.removeLayer(circuloActual);
   circuloActual = e.layer;
   capasDibujadas.addLayer(circuloActual);
@@ -521,9 +538,8 @@ mapa.on(L.Draw.Event.DELETED, () => { circuloActual = null; publicarEstado(); ac
 function toggleRecorrido() {
   const btn = document.getElementById('btn-recorrido');
 
-  // Si estaba esperando click o dibujando → CANCELAR / TERMINAR
   if (modoRecorrido) {
-    sonar('rastreo_fin');
+    soundRastreoFin();
     modoRecorrido          = false;
     esperandoClickInicio   = false;
     dibujandoRecorrido     = false;
@@ -539,8 +555,7 @@ function toggleRecorrido() {
     return;
   }
 
-  // ACTIVAR: entra en modo "esperando click en mapa para empezar"
-  sonar('rastreo_inicio');
+  soundRastreoInicio();
   modoRecorrido        = true;
   esperandoClickInicio = true;
   dibujandoRecorrido   = false;
@@ -551,10 +566,9 @@ function toggleRecorrido() {
     '<strong>🟡 Haz click en el mapa</strong> para comenzar a trazar el recorrido.';
 }
 
-// ── Click en el mapa (desktop): inicia el dibujo al primer click ────────
+// ── Click en el mapa (desktop) ───────────────────────────────
 mapa.on('click', e => {
   if (!modoRecorrido || !esperandoClickInicio) return;
-  // Primer click: arrancar el dibujo
   esperandoClickInicio = false;
   dibujandoRecorrido   = true;
   mapa.dragging.disable();
@@ -565,22 +579,21 @@ mapa.on('click', e => {
   agregarPunto(e.latlng);
 });
 
-// ── Mousemove (desktop): solo dibuja si ya arrancó con el click ─────────
+// ── Mousemove (desktop) ─────────────────────────────────────
 mapa.on('mousemove', e => {
   if (modoRecorrido && dibujandoRecorrido) agregarPunto(e.latlng);
 });
 
-// ── Mouseup (desktop): suelta el botón → termina el recorrido ───────────
+// ── Mouseup (desktop) ───────────────────────────────────────
 mapa.on('mouseup', () => {
   if (modoRecorrido && dibujandoRecorrido) toggleRecorrido();
 });
 
-// ── Touch (móvil): igual que antes, sin cambios ─────────────────────────
+// ── Touch (móvil) ────────────────────────────────────────────
 const mapaEl = document.getElementById('mapa');
 mapaEl.addEventListener('touchmove', e => {
   if (!modoRecorrido) return;
   e.preventDefault();
-  // En móvil, el primer touchmove activa el dibujo directamente
   if (esperandoClickInicio) {
     esperandoClickInicio = false;
     dibujandoRecorrido   = true;
@@ -617,7 +630,7 @@ function agregarPunto(latlng) {
 // BOTÓN LOCAL — ir a mi ubicación GPS
 // ══════════════════════════════════════════════════════
 function irAMiUbicacion() {
-  sonar('local');
+  soundLocal();
   const btn = document.getElementById('btn-local');
   if (!navigator.geolocation) {
     document.getElementById('info').innerHTML =
@@ -633,7 +646,6 @@ function irAMiUbicacion() {
       const acc = Math.round(pos.coords.accuracy);
       mapa.flyTo([lat, lng], 18, { animate: true, duration: 1.2 });
 
-      // Marcador de mi posición (distinto a los de incidente)
       const iconoYo = L.divIcon({
         className: '',
         html: `<div style="
@@ -655,7 +667,7 @@ function irAMiUbicacion() {
       btn.textContent = '📍 Local';
       document.getElementById('info').innerHTML =
         `<strong>📍 Mi ubicación</strong><br>Lat: <b>${lat.toFixed(6)}</b> · Lng: <b>${lng.toFixed(6)}</b><br>Precisión: ±${acc} m`;
-      sonar('circulo');
+      soundCirculo();
     },
     err => {
       btn.classList.remove('buscando');
